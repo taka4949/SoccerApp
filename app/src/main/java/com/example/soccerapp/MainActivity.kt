@@ -1,9 +1,9 @@
 package com.example.soccerapp
 
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,18 +17,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import java.util.*
 
-// --- Data Models ---
 data class M1(
     val id: Int,
     val league: String,
-    val t1: String, val t2: String,
-    var s1: Int, var s2: Int,
-    var time1: Int
+    val t1: String,
+    val t2: String,
+    val s1: Int,
+    val s2: Int,
+    val time1: Int
 )
 
 data class C1(
@@ -37,25 +37,36 @@ data class C1(
     val ts1: Long
 )
 
-// --- Logic ---
-class Logic1 {
-    fun update1(m: M1): M1 {
-        val r = Random()
-        if (r.nextInt(100) == 1) m.s1++
-        if (r.nextInt(120) == 1) m.s2++
-        if (m.time1 < 90) m.time1++
-        return m
+class MainViewModel : ViewModel() {//画面遷移管理
+    var screenState by mutableIntStateOf(0)
+    var selectedLeague by mutableStateOf("")
+    var selectedMatch by mutableStateOf<M1?>(null)
+
+    val matches = mutableStateListOf(//サンプルデータ
+        M1(1, "CL", "Real Madrid", "Man City", 0, 0, 10),
+        M1(2, "CL", "Bayern", "Arsenal", 1, 0, 45),
+        M1(3, "Premier", "Liverpool", "Chelsea", 2, 2, 70),
+        M1(4, "J-League", "Urawa", "Gamba", 0, 1, 30)
+    )
+    val comments = mutableStateListOf<C1>()
+
+    fun loadComments(matchId: Int) {
+        comments.clear()
+    }
+
+    fun sendComment(matchId: Int, text: String) {
+        comments.add(C1("User", text, System.currentTimeMillis()))
     }
 }
 
-// --- Main UI ---
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    MainNavigation()
+                    val viewModel = remember { MainViewModel() }
+                    MainNavigation(viewModel)
                 }
             }
         }
@@ -64,47 +75,20 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainNavigation() {
-    val logic = remember { Logic1() }
-
-    // 画面遷移管理 (0: リーグ一覧, 1: 試合一覧, 2: スレッド)
-    var screenState by remember { mutableIntStateOf(0) }
-    var selectedLeague by remember { mutableStateOf("") }
-    var selectedMatch by remember { mutableStateOf<M1?>(null) }
-
-    // サンプルデータ
-    val matches = remember {
-        mutableStateListOf(
-            M1(1, "CL", "Real Madrid", "Man City", 0, 0, 10),
-            M1(2, "CL", "Bayern", "Arsenal", 1, 0, 45),
-            M1(3, "Premier", "Liverpool", "Chelsea", 2, 2, 70),
-            M1(4, "J-League", "Urawa", "Gamba", 0, 1, 30)
-        )
-    }
-
-    // スコア自動更新
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(5000)
-            for (i in matches.indices) {
-                matches[i] = logic.update1(matches[i].copy())
-            }
-        }
-    }
-
+fun MainNavigation(viewModel: MainViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(when(screenState) {
+                    Text(when(viewModel.screenState) {
                         0 -> "League Selection"
-                        1 -> selectedLeague
-                        else -> "${selectedMatch?.t1} vs ${selectedMatch?.t2}"
+                        1 -> viewModel.selectedLeague
+                        else -> if (viewModel.selectedMatch != null) "${viewModel.selectedMatch!!.t1} vs ${viewModel.selectedMatch!!.t2}" else ""
                     })
                 },
                 navigationIcon = {
-                    if (screenState > 0) {
-                        IconButton(onClick = { screenState-- }) {
+                    if (viewModel.screenState > 0) {
+                        IconButton(onClick = { viewModel.screenState-- }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = null)
                         }
                     }
@@ -113,16 +97,26 @@ fun MainNavigation() {
         }
     ) { p ->
         Box(modifier = Modifier.padding(p)) {
-            when (screenState) {
+            when (viewModel.screenState) {
                 0 -> LeagueListScreen { league ->
-                    selectedLeague = league
-                    screenState = 1
+                    viewModel.selectedLeague = league
+                    viewModel.screenState = 1
                 }
-                1 -> MatchListScreen(matches.filter { it.league == selectedLeague }) { match ->
-                    selectedMatch = match
-                    screenState = 2
+                1 -> {
+                    val filtered = viewModel.matches.filter { it.league == viewModel.selectedLeague }
+                    MatchListScreen(filtered) { match ->
+                        viewModel.selectedMatch = match
+                        viewModel.loadComments(match.id)
+                        viewModel.screenState = 2
+                    }
                 }
-                2 -> ThreadScreen(selectedMatch!!)
+                2 -> if (viewModel.selectedMatch != null) {
+                    ThreadScreen(
+                        m = viewModel.selectedMatch!!,
+                        comments = viewModel.comments,
+                        onSendComment = { text -> viewModel.sendComment(viewModel.selectedMatch!!.id, text) }
+                    )
+                }
             }
         }
     }
@@ -140,8 +134,8 @@ fun LeagueListScreen(onSelect: (String) -> Unit) {
                     .clickable { onSelect(league) },
                 elevation = CardDefaults.cardElevation(4.dp)
             ) {
-                Box(modifier = Modifier.padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text(text = league, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Box(modifier = Modifier.padding(16.dp)) {
+                    Text(text = league, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -149,14 +143,15 @@ fun LeagueListScreen(onSelect: (String) -> Unit) {
 }
 
 @Composable
-fun MatchListScreen(list: List<M1>, onSelect: (M1) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        items(list) { m ->
+fun MatchListScreen(matchList: List<M1>, onSelect: (M1) -> Unit) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        items(matchList) { m ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
-                    .clickable { onSelect(m) }
+                    .clickable { onSelect(m) },
+                elevation = CardDefaults.cardElevation(4.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -165,7 +160,7 @@ fun MatchListScreen(list: List<M1>, onSelect: (M1) -> Unit) {
                 ) {
                     Text(text = m.t1, modifier = Modifier.weight(1f))
                     Text(text = "${m.s1} - ${m.s2}", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                    Text(text = m.t2, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                    Text(text = m.t2, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
                 }
             }
         }
@@ -173,12 +168,10 @@ fun MatchListScreen(list: List<M1>, onSelect: (M1) -> Unit) {
 }
 
 @Composable
-fun ThreadScreen(m: M1) {
-    val comments = remember { mutableStateListOf<C1>() }
+fun ThreadScreen(m: M1, comments: List<C1>, onSendComment: (String) -> Unit) {
     var input1 by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // 固定スコア表示
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
             modifier = Modifier.fillMaxWidth()
@@ -193,7 +186,6 @@ fun ThreadScreen(m: M1) {
             }
         }
 
-        // コメント一覧 (9割以上のエリア)
         LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth().padding(8.dp)) {
             items(comments) { c ->
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
@@ -209,7 +201,6 @@ fun ThreadScreen(m: M1) {
             }
         }
 
-        // 入力エリア
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextField(
                 value = input1,
@@ -219,7 +210,7 @@ fun ThreadScreen(m: M1) {
             )
             IconButton(onClick = {
                 if (input1.isNotBlank()) {
-                    comments.add(C1("User", input1, System.currentTimeMillis()))
+                    onSendComment(input1)
                     input1 = ""
                 }
             }) {
