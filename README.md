@@ -1,32 +1,64 @@
- SoccerApp 
 
-   概要 
+SoccerApp
 
-   海外サッカー（CL、プレミアリーグ）およびJリーグの試合経過を確認しながら、ユーザー同士がコメントを投稿できる掲示板アプリのプロトタイプです。
-   
-    主な機能 
+概要
 
-   - リーグ選択 /  CL、プレミア、Jリーグの3つのカテゴリから選択可能.
-   試合一覧 /  選択したリーグで開催中の試合を表示。
-   - 状態管理の最適化 / MainViewModel を導入し、UIレイヤーからロジックを分離。単方向データフロー（UDF）と状態ホイスティングを適切に実装。
-   - 掲示板機能 /  試合ごとに専用スレッドがあり、匿名でコメントを投稿可能。
-   - 画面遷移 /  リーグ選択 → 試合一覧 → スレッドという階層構造の実装。
+UEFA Champions League、プレミアリーグ、Jリーグの試合情報を確認しながら、将来的に試合ごとのスレッドでユーザー同士がコメントできる掲示板アプリを目指して開発しているAndroidアプリのプロトタイプです。
 
-    使用技術 
+現在はダミーデータを使用し、リーグ別の試合一覧表示と試合詳細画面への遷移を実装しています。
 
-   - Language: Kotlin
-   - UI Framework: Jetpack Compose 
-   - Architecture: ViewModel / State Hoisting / Single Activity Architecture
+実装済みの機能
 
-    今後の実装予定 
+リーグ・試合一覧
+  CL、プレミアリーグ、Jリーグの試合をリーグ別に表示します。
 
-  　- バックエンドAPIの構築 (Go言語) / Firebase等のBaaSに依存せず、Go言語を用いた独自バックエンドサーバーの実装。WebSocketを活用したスコアおよび実況コメントの完全リアルタイム同期機能の構築。
+試合詳細画面
+  試合を選択すると、対戦カード、スコア、試合時間を表示します。
 
-   - データモデルの最適化と永続化 / リアルタイム更新に耐えうる効率的なデータモデルの再設計。および、Room Databaseを用いたコメントや試合データのローカルキャッシュ・永続化機能の実装。
+画面遷移
+  Navigation Composeを使用し、試合一覧から試合詳細画面へ遷移します。
 
-- ナビゲーションの高度化 / Jetpack Navigation Composeを活用した、より堅牢でスケーラブルな画面遷移（リーグ一覧 → 試合一覧 → スレッド）の実装と、状態管理（ViewModel）の責務分離。
+UI状態管理
+  ViewModelとStateFlowを使用し、Loading、Success、Errorの状態を管理しています。画面側では`collectAsStateWithLifecycle()`で状態を監視し、エラー発生時には再読み込みができます。
 
-- 外部API連携 / サッカーの実際の試合データ（ライブスコア、スタッツ等）を取得するための、外部API（Retrofit利用）との連携およびデータマッピング処理。
-- 非同期処理（コルーチン）の導入 / スムーズなユーザー体験を提供するため、Kotlin Coroutinesを実装。
-- プロダクションリリース
-アプリアイコンやリソースの整備、本番用ビルドと署名（Keystore）の設定を行い、Google Play Consoleを通じてストアへ正式リリースする。
+データ層の分離
+  Repositoryパターンを使用し、ViewModelからデータ取得処理を分離しています。現在はダミーデータを返していますが、今後データの取得元をAPIへ変更できる構成にしています。
+
+依存性注入
+  Hiltを使用し、RepositoryをViewModelへ注入しています。
+
+非同期処理
+  Kotlin Coroutinesと`viewModelScope`を使用して、データ取得処理を非同期で実行しています。
+
+コメント用データモデル
+  掲示板機能の実装に向けて、試合とコメントを関連付けるデータモデルを定義しています。
+
+ 使用技術
+
+　・Language: Kotlin
+  ・UI: Jetpack Compose / Material 3
+  ・Architecture:MVVM / Repository Pattern / UDF / Single Activity
+  ・State Management: ViewModel / StateFlow / UiState
+  ・Asynchronous Processing:Kotlin Coroutines
+  ・Dependency Injection:Hilt
+  ・Navigation:Navigation Compose
+
+ 今後の実装予定
+
+1. 外部APIとの連携
+   Retrofitを使用して実際の試合情報を取得し、アプリ内のデータモデルへ変換します。
+
+2. ローカル保存
+   Roomを使用し、取得した試合情報やコメントを端末内へ保存できるようにします。
+
+3. 掲示板機能
+   試合ごとのコメント表示と投稿機能を実装します。
+
+4. Goによるバックエンド構築
+   Goで独自のバックエンドAPIを構築します。WebSocketを利用し、試合情報や実況コメントをリアルタイムで同期できる仕組みを目指します。
+
+5. Firebaseの導入
+   Goバックエンドの構築後、必要な機能を整理した上でFirebaseとの連携を検討します。
+
+6. Google Playへの公開
+   UI、アプリアイコン、リソースを整備し、本番用ビルドと署名設定を行ってGoogle Playへ公開します。
