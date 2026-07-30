@@ -9,6 +9,7 @@ import com.example.soccerapp.data.model.Match
 import com.example.soccerapp.ui.LeagueListScreen
 import com.example.soccerapp.ui.MatchThreadScreen
 import androidx.compose.material3.Text
+import com.example.soccerapp.ui.MatchListScreen
 
 @Composable
 fun AppNavigation(
@@ -24,14 +25,27 @@ fun AppNavigation(
         composable(route = "league_list") {
             LeagueListScreen(
                 leagues = leagues,
-                matches = matches,
-                onMatchClick = { matchId ->
-                    navController.navigate("match/$matchId")//これはleaguelist.kt内で起動する！
-                }//.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
-
+                onLeagueClick = { leagueId ->//これはleaguelistscreen.kt内で起動する！
+                    navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
+                }
             )
         }
 
+        composable(route = "league/{leagueId}") { backStackEntry ->
+            val leagueId = requireNotNull(
+                backStackEntry.arguments?.getString("leagueId")
+            )
+
+            val leagueMatches = matches.filter { match ->
+                match.leagueId == leagueId
+            }
+            MatchListScreen(
+                matches = leagueMatches,
+                onMatchClick = { matchId ->
+                    navController.navigate("match/$matchId")//.navigate()は保存。
+                }
+            )
+        }
         composable(route = "match/{matchId}") { backStackEntry ->
             val matchId = requireNotNull(
                 backStackEntry.arguments?.getString("matchId")
