@@ -20,5 +20,5 @@ abstract class RepositoryModule {//Hiltがこの宣言を読み、必要なコ�
 
     abstract fun bindSoccerRepository(
         implementation: MatchRepository//これが中身。インターフェースは空のルール。
-    ): SoccerRepository
+    ): SoccerRepository//これはインターフェース！。
 }

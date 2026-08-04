@@ -20,7 +20,7 @@ import com.example.soccerapp.ui.state.MainUiState
 
 @Composable
 fun MainRoute(
-    mainViewModel: MainViewModel = viewModel()//ここでデータの永続性を保障している！。
+    mainViewModel: MainViewModel = viewModel()//ここでインスタンス取得。init開始。
 
 
 ) {
@@ -33,12 +33,11 @@ fun MainRoute(
         onRetry = mainViewModel::loadData
     )
 }
-//途中から、以下メインスクリーンの説明から再開
 
 @Composable
 fun MainScreen(
     uiState: MainUiState,
-    onRetry: () -> Unit
+    onRetry: () -> Unit//関数の引数なし、戻り値なし
 ) {
     when (uiState) {
         MainUiState.Loading -> {
@@ -50,7 +49,7 @@ fun MainScreen(
             }
         }
 
-        is MainUiState.Success -> {
+        is MainUiState.Success -> {//ここで初めて画面に表示される。リーグなど。
             AppNavigation(
                 leagues = uiState.leagues,
                 matches = uiState.matches
