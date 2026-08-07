@@ -7,26 +7,63 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import javax.inject.Singleton
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
+import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.example.soccerapp.data.remote.api.SoccerApiService
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
     @Provides
-    @Singleton
+    @Singleton//返す値を1つにする
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val request = chain.request()
+            .addInterceptor { chain ->//interceptは、通信をいったん止めている→proceed必須
+                val request = chain.request()//
                     .newBuilder()
                     .header(
                         "X-Auth-Token",
                         BuildConfig.FOOTBALL_DATA_API_TOKEN
                     )
-                    .build()
+                    .build()//リクエストの完成
 
-                chain.proceed(request)
+                chain.proceed(request)//通信を続ける
             }
-            .build()
+            .build()//okhttpの完成
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(
+        okHttpClient: OkHttpClient
+    ): Retrofit {
+        val json = Json {
+            ignoreUnknownKeys = true//dtoに存在しないものは無視していいというルール
+        }
+
+        return Retrofit.Builder()
+            .baseUrl("https://api.football-data.org/v4/")//これがもともとあって、完成する。
+            .client(okHttpClient)//使うよう指示
+            .addConverterFactory(
+                json.asConverterFactory(
+                    "application/json".toMediaType()
+                )
+            )
+            .build()//ここで道具すべてが完成する。
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideSoccerApiService(
+        retrofit: Retrofit
+    ): SoccerApiService {
+        return retrofit.create(
+            SoccerApiService::class.java//ここで、retorofitとapiseriviceのものが合体する、すべてが完成して、返す。
+        )
     }
 }
