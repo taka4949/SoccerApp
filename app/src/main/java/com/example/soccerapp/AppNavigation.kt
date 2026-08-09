@@ -14,7 +14,8 @@ import com.example.soccerapp.ui.MatchListScreen
 @Composable
 fun AppNavigation(
     leagues: List<League>,
-    matches: List<Match>
+    matches: List<Match>,
+    onLeagueSelected: (String) -> Unit//この関数と引数で返り値は無し、というセットを下に渡す。
 ) {
     val navController = rememberNavController()//naviはスタック、変遷の履歴を記録する。戻ることが可能へ
 
@@ -26,6 +27,7 @@ fun AppNavigation(
             LeagueListScreen(
                 leagues = leagues,
                 onLeagueClick = { leagueId ->//これはleaguelistscreen.kt内で起動する！
+                    onLeagueSelected(leagueId)
                     navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
                 }
             )

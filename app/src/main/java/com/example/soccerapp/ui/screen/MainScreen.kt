@@ -30,14 +30,17 @@ fun MainRoute(
 
     MainScreen(
         uiState = uiState,
-        onRetry = mainViewModel::loadData
+        onRetry = mainViewModel::loadData,//意味＝ファイル内の関数
+                onLeagueSelected = mainViewModel::loadMatches
     )
 }
 
 @Composable
 fun MainScreen(
     uiState: MainUiState,
-    onRetry: () -> Unit//関数の引数なし、戻り値なし
+    onRetry: () -> Unit, //関数の引数なし、戻り値なし
+    onLeagueSelected: (String) -> Unit
+
 ) {
     when (uiState) {
         MainUiState.Loading -> {
@@ -49,10 +52,11 @@ fun MainScreen(
             }
         }
 
-        is MainUiState.Success -> {//ここで初めて画面に表示される。リーグなど。
+        is MainUiState.Success -> {//ここで初めて画面にリーグが表示されるよう動く。リーグなど。
             AppNavigation(
                 leagues = uiState.leagues,
-                matches = uiState.matches
+                matches = uiState.matches,
+                onLeagueSelected = onLeagueSelected
             )
         }
 
@@ -65,7 +69,7 @@ fun MainScreen(
                 Text(text = uiState.message)
 
                 Button(onClick = onRetry) {
-                    Text(text = "Retry")
+                    Text(text = "Retry")//ここのために、渡す。
                 }
             }
         }

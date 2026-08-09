@@ -32,7 +32,7 @@ object NetworkModule {
 
                 chain.proceed(request)//通信を続ける
             }
-            .build()//okhttpの完成
+            .build()//okhttpの完成。build()はhiltによる道具の作成時（1週目）のみ行われる。
     }
 
 
@@ -47,14 +47,14 @@ object NetworkModule {
 
         return Retrofit.Builder()
             .baseUrl("https://api.football-data.org/v4/")//これがもともとあって、完成する。
-            .client(okHttpClient)//使うよう指示
+            .client(okHttpClient)//ここで、送信（ではないが、ざっくり理解）clientは（）を使うよう指示している。
             .addConverterFactory(
                 json.asConverterFactory(
                     "application/json".toMediaType()
                 )
             )
-            .build()//ここで道具すべてが完成する。
-    }
+            .build()//ここで道具すべてが完成する。2週目、ここでjsonが帰ってきてkotlinに変換。
+    }//ここで2週目～に帰ってきたデータをsoccerApiServiceのgetcompetitions()に送られる。
 
 
     @Provides
@@ -64,6 +64,7 @@ object NetworkModule {
     ): SoccerApiService {
         return retrofit.create(
             SoccerApiService::class.java//ここで、retorofitとapiseriviceのものが合体する、すべてが完成して、返す。
-        )
+        )//soccerApiServiseという型を返す。create()。ここでこの返り値の理由はhiltで追うため。
+        //ここは1週目のhiltの準備だけしか通らない。ここで、base url + competitionsでget通信する、きっかけをつくる。
     }
 }

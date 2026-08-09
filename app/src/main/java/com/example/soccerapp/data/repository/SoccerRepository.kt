@@ -8,5 +8,8 @@ interface SoccerRepository {
 
     suspend fun getLeagues(): List<League>
 
-    suspend fun getMatches(): List<Match>
+    suspend fun getMatches(
+        competitionCode: String
+    ): List<Match>
+
 }

@@ -25,7 +25,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
         )
 
     val uiState: StateFlow<MainUiState> =
-        _uiState.asStateFlow()
+        _uiState.asStateFlow()//外部に公開用、ここはデータの更新を直接行わない、使わない。
 
     init {
         loadData()
@@ -40,13 +40,10 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
                 val leagues =
                     repository.getLeagues()
 
-                val matches =
-                    repository.getMatches()
-
                 _uiState.value =
                     MainUiState.Success(
                         leagues = leagues,
-                        matches = matches
+                        matches = emptyList()
                     )
             } catch (exception: CancellationException) {
                 throw exception
@@ -60,4 +57,31 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
             }
         }
     }
+    fun loadMatches(
+        competitionCode: String
+    ) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+
+            if (currentState !is MainUiState.Success) {
+                return@launch
+            }
+
+            val matches = repository.getMatches(
+                competitionCode
+            )
+
+            _uiState.value = currentState.copy(
+                matches = matches
+            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。
+        }//変数currentstateを持つ理由↓
+    }
 }
+
+//uiState.value
+//= データ
+//= ただし型は MainUiState として見えている
+//
+//currentState
+//= 同じデータを受け取ったもの
+//= is Success の確認後は Success 型として見える
