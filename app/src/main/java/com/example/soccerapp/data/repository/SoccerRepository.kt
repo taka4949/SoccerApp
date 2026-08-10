@@ -13,3 +13,12 @@ interface SoccerRepository {
     ): List<Match>
 
 }
+
+
+//SoccerRepository = 何ができるかを決める
+
+//MatchRepository = どうやって実現するかを書く
+
+//Hilt = interfaceと実装を結びつける
+
+//MainViewModel =具体的な実装を知らずに interfaceだけ使う

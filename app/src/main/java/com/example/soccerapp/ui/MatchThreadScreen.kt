@@ -19,7 +19,11 @@ fun  MatchThreadScreen(
             text = "${match.homeScore} - ${match.awayScore}"
         )
         Text(
-            text = match.matchTime.toString()
+            text = match.status
+        )
+
+        Text(
+            text = match.utcDate
         )
 
     }

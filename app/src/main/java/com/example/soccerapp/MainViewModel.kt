@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class MainViewModel @Inject constructor(//自分でリポジトリは書かない。外から受け取る（hilt)
     private val repository : SoccerRepository//ここはインターフェース
-) : ViewModel(){
+) : ViewModel(){//viewmodelScopeやライフサイクル管理、再描画時の画面保持の継承を継承している（クラス）
 
 
     // 「内部書き換え用（Mutable）」と「外部公開用（読み取り専用）
@@ -73,7 +73,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
 
             _uiState.value = currentState.copy(
                 matches = matches
-            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。
+            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→mainroute関数で監視してuiへ流す。
         }//変数currentstateを持つ理由↓
     }
 }

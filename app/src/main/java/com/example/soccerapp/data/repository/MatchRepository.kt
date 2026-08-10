@@ -15,8 +15,8 @@ class MatchRepository@Inject constructor( private val soccerApiService: SoccerAp
 ) : SoccerRepository {//このクラスが必要になったら、このコンストラクタを使えば作れる。
 
 
-   override suspend  fun getLeagues(): List<League> {
-       delay(2000)
+    override suspend fun getLeagues(): List<League> {
+        delay(2000)
 
         val response = soccerApiService.getCompetitions()//ここでデータクラスという全体を手に入れる
         val competitions = response.competitions//ここでリーグ一覧を手に入れる
@@ -33,15 +33,28 @@ class MatchRepository@Inject constructor( private val soccerApiService: SoccerAp
     override suspend fun getMatches(
         competitionCode: String
     ): List<Match> {
-        delay(2000)
-        return listOf(
-            Match(1, "CL", "Real Madrid", "Man City", 0, 0, 10),
-            Match(2, "CL", "Bayern", "Arsenal", 1, 0, 45),
-            Match(3, "Premier", "Liverpool", "Chelsea", 2, 2, 70),
-            Match(4, "J1", "Urawa", "Gamba", 0, 1, 30)
-        ).filter { match ->
-            match.leagueId == competitionCode
+
+        val response = soccerApiService.getMatches(
+            competitionCode = competitionCode,
+            status = "SCHEDULED"//未定の試合のみ
+        )
+
+        val matches = response.matches
+
+        return matches.map { match ->
+            Match(
+                id = match.id,
+                leagueId = match.competition.code,
+                homeTeam = match.homeTeam.name ?: "Unknown",
+                awayTeam = match.awayTeam.name ?: "Unknown",
+                homeScore = match.score.fullTime.home,
+                awayScore = match.score.fullTime.away,
+                utcDate = match.utcDate,
+                status = match.status
+            )//ここで依存関係切り離す。ui用データmatch.ktを通して送る。
+
         }
     }
 }
+
 
