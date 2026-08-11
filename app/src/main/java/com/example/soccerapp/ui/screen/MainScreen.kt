@@ -55,7 +55,7 @@ fun MainScreen(
         is MainUiState.Success -> {//ここで初めて画面にリーグが表示されるよう動く。リーグなど。
             AppNavigation(
                 leagues = uiState.leagues,
-                matches = uiState.matches,
+                matches = uiState.matches,//ここで、matchリストの部分のみ更新して、マッチリスト表示へ。
                 onLeagueSelected = onLeagueSelected
             )
         }

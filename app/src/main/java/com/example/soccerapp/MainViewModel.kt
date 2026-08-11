@@ -69,9 +69,9 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
 
             val matches = repository.getMatches(
                 competitionCode
-            )
+            )//ここでmatchリスト取得
 
-            _uiState.value = currentState.copy(
+            _uiState.value = currentState.copy(//mainscreenのmainrouteがcollectする。
                 matches = matches
             )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→mainroute関数で監視してuiへ流す。
         }//変数currentstateを持つ理由↓

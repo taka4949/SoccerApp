@@ -27,9 +27,9 @@ fun AppNavigation(
             LeagueListScreen(
                 leagues = leagues,
                 onLeagueClick = { leagueId ->//これはleaguelistscreen.kt内で起動する！
-                    onLeagueSelected(leagueId)
+                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。
                     navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
-                }
+                }//ここで、クリックしたリーグIDを保存。下のroute用
             )
         }
 
@@ -39,9 +39,9 @@ fun AppNavigation(
             )
 
             val leagueMatches = matches.filter { match ->
-                match.leagueId == leagueId
+                match.leagueId == leagueId//二重チェックしている。既にapi側（apiservice)で選別済み。
             }
-            MatchListScreen(
+            MatchListScreen(//リーグ内の試合リスト
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
                     navController.navigate("match/$matchId")//.navigate()は保存。
@@ -62,7 +62,7 @@ fun AppNavigation(
                     text = "Loading..."
                 )
             } else
-            MatchThreadScreen(
+            MatchThreadScreen(//1試合の詳細情報
                 match = selectedMatch
             )
         }
