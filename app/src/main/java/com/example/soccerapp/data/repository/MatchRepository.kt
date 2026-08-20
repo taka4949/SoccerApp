@@ -8,6 +8,7 @@ import com.example.soccerapp.data.model.Match
 import kotlinx.coroutines.delay
 import javax.inject.Inject
 import com.example.soccerapp.data.remote.api.SoccerApiService
+import kotlinx.coroutines.CancellationException
 
 
 //なぜ必要か？データの仕入れ先が将来どう変わっても、ViewModelや画面のコードを1行も書き直さなくて済むようにするため
@@ -73,6 +74,8 @@ class MatchRepository@Inject constructor(
                     status = match.status
                 ) // ここで依存関係を切り離す。UI用データMatch.ktを通して送る。
             }
+        }  catch (e: CancellationException) {//アプリを完全終了し、ui表示が必要ではなくなった場合の処理。
+            throw e
         } catch (e: Exception) {
             val cachedMatches = matchDao.getMatchesByLeague(
                 competitionCode

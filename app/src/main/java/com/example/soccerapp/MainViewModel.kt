@@ -60,7 +60,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
     fun loadMatches(
         competitionCode: String
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch {//Dispatcherを指定していない＝viewmodelscopeの設定を引き継ぐ
             val currentState = _uiState.value
 
             if (currentState !is MainUiState.Success) {
