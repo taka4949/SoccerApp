@@ -5,9 +5,12 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.ktor.server.application.install
 
 
 
@@ -21,6 +24,13 @@ fun main() {
 }
 
 fun Application.module() {
+    install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定。
+        json()
+    }
+
+    val commentStore = CommentStore()
+
+
     routing {//URLごとの処理を登録するktor関数
         get("/health") {
             call.respondText(
@@ -29,6 +39,8 @@ fun Application.module() {
                 status = HttpStatusCode.OK,//実際の番号（200）
             )
         }
+
+        commentRoutes(commentStore)
     }
 
 }
