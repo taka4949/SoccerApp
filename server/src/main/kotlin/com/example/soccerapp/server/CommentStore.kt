@@ -8,7 +8,7 @@ class CommentStore {//投稿された時に動く。保存して、コメント�
 
     fun create(
         matchId: Int,
-        request: CreateCommentRequest,
+        request: CreateCommentRequest,//データクラス
     ): Comment {
         val comment = Comment(
             id = nextId,
@@ -18,14 +18,14 @@ class CommentStore {//投稿された時に動く。保存して、コメント�
             createdAt = Instant.now().toString(),
         )
 
-        comments.add(comment)
+        comments.add(comment)//一応ここで保存している。(postgreSQLはまだ存在しない）。
         nextId += 1
 
         return comment
     }
 
     fun getByMatchId(matchId: Int): List<Comment> {//掲示板を開くときに動く
-        return comments.filter { comment ->
+        return comments.filter { comment ->//今の段階では、リストにごちゃまぜでコメントが入っている。
             comment.matchId == matchId
         }
     }

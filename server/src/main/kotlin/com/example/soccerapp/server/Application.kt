@@ -24,7 +24,7 @@ fun main() {
 }
 
 fun Application.module() {
-    install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定。
+    install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定。大事。
         json()
     }
 
@@ -53,3 +53,5 @@ fun Application.module() {
 //Nettyで8080番を待ち受ける
 //↓
 //Application.module()を実行
+
+//android→json→ktorサーバー→kotlinに直す→json→androidへ
