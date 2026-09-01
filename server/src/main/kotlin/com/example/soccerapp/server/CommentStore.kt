@@ -2,11 +2,11 @@ package com.example.soccerapp.server
 
 import java.time.Instant
 
-class CommentStore {//投稿された時に動く。保存して、コメントをuiへ表示するためにリターンしている。
+class CommentStore : CommentRepository {//投稿された時に動く。保存して、コメントをuiへ表示するためにリターンしている。
     private val comments = mutableListOf<Comment>()
     private var nextId = 1L
 
-    fun create(
+   override suspend fun create(
         matchId: Int,
         request: CreateCommentRequest,//データクラス
     ): Comment {
@@ -24,9 +24,10 @@ class CommentStore {//投稿された時に動く。保存して、コメント�
         return comment
     }
 
-    fun getByMatchId(matchId: Int): List<Comment> {//掲示板を開くときに動く
+    override suspend fun getByMatchId(matchId: Int): List<Comment> {//掲示板を開くときに動く
         return comments.filter { comment ->//今の段階では、リストにごちゃまぜでコメントが入っている。
             comment.matchId == matchId
         }
     }
 }
+//テスト時に利用する。jdbcCommentRepositoryが本番用。

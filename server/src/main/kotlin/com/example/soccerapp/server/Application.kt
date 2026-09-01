@@ -24,6 +24,7 @@ fun main() {
 }
 
 fun Application.module() {
+    DatabaseFactory.verifyConnection()
     install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定。大事。
         json()
     }

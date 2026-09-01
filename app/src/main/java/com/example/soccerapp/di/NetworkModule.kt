@@ -22,7 +22,7 @@ object NetworkModule {
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->//interceptは、通信をいったん止めている→proceed必須
-                val request = chain.request()//
+                val request = chain.request()//ベースurl取得
                     .newBuilder()
                     .header(
                         "X-Auth-Token",
@@ -47,13 +47,13 @@ object NetworkModule {
 
         return Retrofit.Builder()
             .baseUrl("https://api.football-data.org/v4/")//これがもともとあって、完成する。
-            .client(okHttpClient)//ここで、送信（ではないが、ざっくり理解）clientは（）を使うよう指示している。
+            .client(okHttpClient)//ここで、clientは（）を使うよう指示している。
             .addConverterFactory(
                 json.asConverterFactory(
                     "application/json".toMediaType()
                 )
             )
-            .build()//ここで道具すべてが完成する。2週目、ここでjsonが帰ってきてkotlinに変換。
+            .build()//ここで道具すべてが完成する。
     }//ここで2週目～に帰ってきたデータをsoccerApiServiceのgetcompetitions()に送られる。
 
 
@@ -65,6 +65,22 @@ object NetworkModule {
         return retrofit.create(
             SoccerApiService::class.java//ここで、retorofitとapiseriviceのものが合体する、すべてが完成して、返す。
         )//soccerApiServiseという型を返す。create()。ここでこの返り値の理由はhiltで追うため。
-        //ここは1週目のhiltの準備だけしか通らない。ここで、base url + competitionsでget通信する、きっかけをつくる。
+        //ここは1週目のhiltの準備だけしか通らない。大事→base url + competitionsでget通信する、きっかけをつくる。
     }
 }
+
+//retorofitのイメージ→class GeneratedSoccerApiService : SoccerApiService {
+//
+//    override suspend fun getCompetitions(): CompetitionResponseDto {
+//
+//        // baseUrl + @GET("competitions")
+//        // ↓
+//        // OkHttpで通信
+//        // ↓
+//        // JSONを取得
+//        // ↓
+//        // ConverterでDTOへ変換
+//
+//        return convertedDto（ここで、matchrepositoryのもとへいく）
+//    }
+//}

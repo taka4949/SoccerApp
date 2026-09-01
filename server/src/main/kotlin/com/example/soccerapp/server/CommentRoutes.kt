@@ -73,7 +73,7 @@ fun Route.commentRoutes(commentStore: CommentStore) {
                 return@post
             }
 
-            val comment = commentStore.create(matchId, request)//ここでコメントを保存！
+            val comment = commentStore.create(matchId, request)//ここでコメントを保存,  authorなどが一体＝commentになる。
 
             call.respond(
                 HttpStatusCode.Created,

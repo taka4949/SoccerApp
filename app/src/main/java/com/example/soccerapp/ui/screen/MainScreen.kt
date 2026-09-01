@@ -31,7 +31,7 @@ fun MainRoute(
     MainScreen(
         uiState = uiState,
         onRetry = mainViewModel::loadData,//意味＝ファイル内の関数
-                onLeagueSelected = mainViewModel::loadMatches
+                onLeagueSelected = mainViewModel::loadMatches//大事、Navigationにviewmodelの関数だと知らせないため。
     )
 }
 
@@ -69,7 +69,7 @@ fun MainScreen(
                 Text(text = uiState.message)
 
                 Button(onClick = onRetry) {
-                    Text(text = "Retry")//ここのために、渡す。
+                    Text(text = "Retry")//ここのために、onretry渡す。
                 }
             }
         }

@@ -12,7 +12,8 @@ interface SoccerApiService {
 
     @GET("competitions")
     suspend fun getCompetitions(): CompetitionsResponseDto//関数名と戻り値の型、リーグ一覧を取得
-    //ここでresponseDtoはnetworkmodule.ktでprovideretrofit内からくる。
+    //ここでresponseDtoはnetworkmodule.kt内のprovideretrofit関数内からくる。
+    //実装がない関数はreturnをかけないため。
 
 
 

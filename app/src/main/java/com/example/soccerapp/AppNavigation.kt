@@ -27,7 +27,7 @@ fun AppNavigation(
             LeagueListScreen(
                 leagues = leagues,
                 onLeagueClick = { leagueId ->//これはleaguelistscreen.kt内で起動する！
-                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。
+                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。onLeagueSelected=loadMatches
                     navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
                 }//ここで、クリックしたリーグIDを保存。下のroute用
             )
