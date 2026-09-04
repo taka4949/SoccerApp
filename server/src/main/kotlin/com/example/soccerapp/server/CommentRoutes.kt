@@ -11,7 +11,9 @@ import io.ktor.server.routing.route
 
 
 
-fun Route.commentRoutes(commentStore: CommentStore) {
+fun Route.commentRoutes(
+    commentRepository: CommentRepository,
+) {
     route("/matches/{matchId}/comments") {
         get {//掲示板を開くときに動く用の関数
             val matchId = call.parameters["matchId"]?.toIntOrNull()//callが引数の役割を果たす。application.ktからurlとつながったcallがくる。
@@ -24,7 +26,7 @@ fun Route.commentRoutes(commentStore: CommentStore) {
                 return@get
             }
 
-            val comments = commentStore.getByMatchId(matchId)
+            val comments = commentRepository.getByMatchId(matchId)
 
             call.respond(
                 HttpStatusCode.OK,
@@ -73,7 +75,7 @@ fun Route.commentRoutes(commentStore: CommentStore) {
                 return@post
             }
 
-            val comment = commentStore.create(matchId, request)//ここでコメントを保存,  authorなどが一体＝commentになる。
+            val comment = commentRepository.create(matchId, request)//ここでコメントを保存,  authorなどが一体＝commentになる。
 
             call.respond(
                 HttpStatusCode.Created,

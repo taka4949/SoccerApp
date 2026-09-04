@@ -18,7 +18,8 @@ import com.example.soccerapp.data.remote.api.SoccerApiService
 object NetworkModule {
 
     @Provides
-    @Singleton//返す値を1つにする
+    @Singleton//生成は1回。
+    @FootballNetwork//返り値が複数ある場合（OkHttp,Retrofitが該当）、Hiltが識別できるようにするため。
     fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->//interceptは、通信をいったん止めている→proceed必須
@@ -27,7 +28,7 @@ object NetworkModule {
                     .header(
                         "X-Auth-Token",
                         BuildConfig.FOOTBALL_DATA_API_TOKEN
-                    )
+                    )//local.propertiesから受け取るトークン（Config)。
                     .build()//リクエストの完成
 
                 chain.proceed(request)//通信を続ける
@@ -38,8 +39,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @FootballNetwork
     fun provideRetrofit(
-        okHttpClient: OkHttpClient
+        @FootballNetwork okHttpClient: OkHttpClient
     ): Retrofit {
         val json = Json {
             ignoreUnknownKeys = true//dtoに存在しないものは無視していいというルール
@@ -54,22 +56,21 @@ object NetworkModule {
                 )
             )
             .build()//ここで道具すべてが完成する。
-    }//ここで2週目～に帰ってきたデータをsoccerApiServiceのgetcompetitions()に送られる。
+    }//ここで2週目～に帰ってきたデータをsoccerApiServiceのgetCompetitions()に送られる。
 
 
     @Provides
     @Singleton
     fun provideSoccerApiService(
-        retrofit: Retrofit
+        @FootballNetwork retrofit: Retrofit
     ): SoccerApiService {
         return retrofit.create(
-            SoccerApiService::class.java//ここで、retorofitとapiseriviceのものが合体する、すべてが完成して、返す。
-        )//soccerApiServiseという型を返す。create()。ここでこの返り値の理由はhiltで追うため。
+            SoccerApiService::class.java//ここで、RetrofitとSoccerApiServiceのものが合体する、すべてが完成して、返す。
+        )//SoccerApiServiceという型を返す。create()。ここでこの返り値の理由はhiltで追うため。
         //ここは1週目のhiltの準備だけしか通らない。大事→base url + competitionsでget通信する、きっかけをつくる。
     }
 }
-
-//retorofitのイメージ→class GeneratedSoccerApiService : SoccerApiService {
+//Retrofitのイメージ→class GeneratedSoccerApiService : SoccerApiService {
 //
 //    override suspend fun getCompetitions(): CompetitionResponseDto {
 //
