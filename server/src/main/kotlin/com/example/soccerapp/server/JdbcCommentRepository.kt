@@ -6,7 +6,7 @@ import kotlinx.coroutines.withContext
 
 class JdbcCommentRepository : CommentRepository {
 
-    override suspend fun create(//この試合にコメント（android)からKtorへ→matchID→結びついているthreadID検索→それを付帯したコメントをテーブルに保存。
+    override suspend fun create(//保存用。この試合にコメントからKtorへ→matchID→結びついているthreadID検索→それを付帯したコメントをテーブルに保存。
         matchId: Int,
         request: CreateCommentRequest,
     ): Comment = withContext(Dispatchers.IO) {//sqlを送ってから待ち時間が発生する。待機時間が発生する処理向けの処理スレッド

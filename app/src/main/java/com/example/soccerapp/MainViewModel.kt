@@ -60,7 +60,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
     fun loadMatches(
         competitionCode: String
     ) {
-        viewModelScope.launch {//Dispatcherを指定していない＝viewmodelscopeの設定を引き継ぐ
+        viewModelScope.launch {//Dispatcherを指定していない＝ViewmodelScopeの設定を引き継ぐ
             val currentState = _uiState.value
 
             if (currentState !is MainUiState.Success) {
@@ -69,11 +69,11 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
 
             val matches = repository.getMatches(
                 competitionCode
-            )//ここでmatchリスト取得
+            )//ここでmatchリスト取得(MatchRepository)
 
-            _uiState.value = currentState.copy(//MainscreenのMainrouteがcollectする。
+            _uiState.value = currentState.copy(//MainScreenのMainRouteがcollectする。
                 matches = matches
-            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→mainroute関数で監視してuiへ流す。
+            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→MainRoute関数で監視してuiへ流す。
         }//変数currentStateを持つ理由↓
     }
 }

@@ -41,7 +41,7 @@ object CommentNetworkModule {
             .client(okHttpClient)
             .addConverterFactory(
                 json.asConverterFactory(
-                "application/json".toMediaType()
+                "application/json".toMediaType()//ここでList<CommentDto>へ変換。
             )
         )
             .build()
