@@ -14,7 +14,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.example.soccerapp.data.remote.api.SoccerApiService
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(SingletonComponent::class)//hilt管理クラスへ登録
 object NetworkModule {
 
     @Provides

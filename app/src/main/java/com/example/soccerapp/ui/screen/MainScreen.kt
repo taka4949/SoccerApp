@@ -25,12 +25,12 @@ fun MainRoute(
 
 ) {
     val uiState by
-    mainViewModel.uiState.collectAsStateWithLifecycle()
+    mainViewModel.uiState.collectAsStateWithLifecycle()//画面のLifecycleに合わせてStateFlowを監視
     //ここで、変数の変化を観測し、↓へ再コンポーズ促す。
 
     MainScreen(
         uiState = uiState,
-        onRetry = mainViewModel::loadData,//意味＝ファイル内の関数
+        onRetry = mainViewModel::loadData,//意味＝ファイル内の関数→エラーになった際に必要
                 onLeagueSelected = mainViewModel::loadMatches//大事、Navigationにviewmodelの関数だと知らせないため。
     )
 }
@@ -38,7 +38,7 @@ fun MainRoute(
 @Composable
 fun MainScreen(
     uiState: MainUiState,
-    onRetry: () -> Unit, //関数の引数なし、戻り値なし
+    onRetry: () -> Unit, //関数の引数なし、戻り値なし。エラー用
     onLeagueSelected: (String) -> Unit
 
 ) {
@@ -69,7 +69,7 @@ fun MainScreen(
                 Text(text = uiState.message)
 
                 Button(onClick = onRetry) {
-                    Text(text = "Retry")//ここのために、onretry渡す。
+                    Text(text = "Retry")//ここのために、onRetry渡す。
                 }
             }
         }

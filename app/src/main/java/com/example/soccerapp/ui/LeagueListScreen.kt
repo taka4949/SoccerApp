@@ -19,7 +19,7 @@ fun LeagueListScreen(
             Text(
                 text = league.name,
                 modifier = Modifier.clickable {
-                    onLeagueClick(league.id)
+                    onLeagueClick(league.id)//loadMatch()へ→Repository→試合データもってくる。
                 }
             )
         }

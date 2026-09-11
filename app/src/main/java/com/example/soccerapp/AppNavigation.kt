@@ -10,6 +10,7 @@ import com.example.soccerapp.ui.LeagueListScreen
 import com.example.soccerapp.ui.MatchThreadScreen
 import androidx.compose.material3.Text
 import com.example.soccerapp.ui.MatchListScreen
+import com.example.soccerapp.ui.MatchThreadRoute
 
 @Composable
 fun AppNavigation(
@@ -45,13 +46,18 @@ fun AppNavigation(
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
                     navController.navigate("match/$matchId")//.navigate()は保存。試合をタップが下のトリガー。
-                }
+                }//マッチクリックしたら、navigate()にマッチIｄをいれて下の関数↓が動く。
             )
         }
         composable(route = "match/{matchId}") { backStackEntry ->
             val matchId = requireNotNull(
                 backStackEntry.arguments?.getString("matchId")
             ).toInt()//バックスタックから存在するmatchIDをコピーして取得している。
+
+
+            MatchThreadRoute(
+                matchId = matchId
+            )
 
             val selectedMatch = matches.firstOrNull { match ->
                 match.id == matchId
