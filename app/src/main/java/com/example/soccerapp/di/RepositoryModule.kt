@@ -24,3 +24,34 @@ abstract class RepositoryModule {//Hiltがこの宣言を読み、必要なコ�
 }
 
 //abstractとは、処理内容が書かれていない関数が残っている、印。
+
+
+//Moduleが必要な理由
+//
+//Hiltがそのままでは作れない場合です。
+//
+//interface
+//→ どの実装を使うか分からない
+//→ @Bindsを置くModuleが必要
+//
+//Retrofitなどの外部クラス
+//→ @Inject constructorを書けない
+//→ @Providesを置くModuleが必要
+//
+//今回の整理です。
+//
+//MatchThreadViewModel
+//→ @HiltViewModel + @Inject
+//→ Module不要
+//
+//NetworkCommentRepository本体
+//→ @Inject constructor
+//→ 生成だけならModule不要
+//
+//CommentRepository
+//→ interface
+//→ NetworkCommentRepositoryとの接続にModule必要
+//
+//Retrofit
+//→ 外部クラス
+//→ 作り方を示すModule必要

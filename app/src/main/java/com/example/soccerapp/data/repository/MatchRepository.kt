@@ -5,7 +5,6 @@ import com.example.soccerapp.data.local.dao.MatchDao
 import com.example.soccerapp.data.local.entity.MatchEntity
 import com.example.soccerapp.data.model.League
 import com.example.soccerapp.data.model.Match
-import kotlinx.coroutines.delay
 import javax.inject.Inject
 import com.example.soccerapp.data.remote.api.SoccerApiService
 import kotlinx.coroutines.CancellationException
@@ -14,6 +13,9 @@ import kotlinx.coroutines.CancellationException
 //なぜ必要か？データの仕入れ先が将来どう変わっても、ViewModelや画面のコードを1行も書き直さなくて済むようにするため
 //retrofitなどからデータをとる際に、viewmodel内にロジックを書くと複雑なファイルになってしまう。
 //テストを簡単に実行するため。リポジトリがあることであらゆるパターンの安全確認が可能。
+
+
+
 class MatchRepository@Inject constructor(
     private val soccerApiService: SoccerApiService,
     private val matchDao: MatchDao
@@ -21,7 +23,6 @@ class MatchRepository@Inject constructor(
 
 
     override suspend fun getLeagues(): List<League> {
-        delay(2000)
 
         val response = soccerApiService.getCompetitions()//ここでデータクラスという全体を手に入れる
         val competitions = response.competitions//ここでリーグ一覧を手に入れる
@@ -34,6 +35,8 @@ class MatchRepository@Inject constructor(
         }
 
     }
+
+
 
     override suspend fun getMatches(
         competitionCode: String
@@ -74,6 +77,11 @@ class MatchRepository@Inject constructor(
                     status = match.status
                 ) // ここで依存関係を切り離す。UI用データMatch.ktを通して送る。
             }
+
+
+
+
+
         }  catch (e: CancellationException) {//アプリを完全終了し、ui表示が必要ではなくなった場合の処理。
             throw e
         } catch (e: Exception) {

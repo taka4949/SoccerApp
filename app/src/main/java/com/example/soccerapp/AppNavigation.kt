@@ -10,6 +10,7 @@ import com.example.soccerapp.ui.LeagueListScreen
 import com.example.soccerapp.ui.MatchThreadScreen
 import androidx.compose.material3.Text
 import com.example.soccerapp.ui.MatchListScreen
+import com.example.soccerapp.ui.MatchThreadRoute
 
 @Composable
 fun AppNavigation(
@@ -26,10 +27,10 @@ fun AppNavigation(
         composable(route = "league_list") {
             LeagueListScreen(
                 leagues = leagues,
-                onLeagueClick = { leagueId ->//これはleaguelistscreen.kt内で起動する！
-                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。
+                onLeagueClick = { leagueId ->//これはLeagueListScreen内で起動する！
+                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。onLeagueSelected=loadMatches
                     navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
-                }//ここで、クリックしたリーグIDを保存。下のroute用
+                }//ここで、クリックが下の処理へ行くトリガー。リーグIDとその画面情報を保存。
             )
         }
 
@@ -39,19 +40,24 @@ fun AppNavigation(
             )
 
             val leagueMatches = matches.filter { match ->
-                match.leagueId == leagueId//二重チェックしている。既にapi側（apiservice)で選別済み。
+                match.leagueId == leagueId//二重チェックしている。既にapi側（ApiService)で選別済み。
             }
-            MatchListScreen(//リーグ内の試合リスト
+            MatchListScreen(//リーグ内の試合リスト(ここですべての試合を表示している！！！！！！）
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
-                    navController.navigate("match/$matchId")//.navigate()は保存。
-                }
+                    navController.navigate("match/$matchId")//.navigate()は保存。試合をタップが下のトリガー。
+                }//マッチクリックしたら、navigate()にマッチIｄをいれて下の関数↓が動く。
             )
         }
         composable(route = "match/{matchId}") { backStackEntry ->
             val matchId = requireNotNull(
                 backStackEntry.arguments?.getString("matchId")
-            ).toInt()
+            ).toInt()//バックスタックから存在するmatchIDをコピーして取得している。
+
+
+            MatchThreadRoute(
+                matchId = matchId
+            )
 
             val selectedMatch = matches.firstOrNull { match ->
                 match.id == matchId

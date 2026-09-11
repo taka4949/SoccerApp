@@ -10,8 +10,8 @@ data class CreateCommentRequest(//androidからktorが受け取る未完成の�
 
 @Serializable
 data class Comment(//ktorが作って保存、androidへ返却する完成データ
-    val id: Long,
-    val matchId: Int,
+    val id: Long,//サーバー側が決める必要があるから。
+    val matchId: Int,//同様。
     val author: String,
     val text: String,
     val createdAt: String,

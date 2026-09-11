@@ -36,7 +36,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
             _uiState.value =
                 MainUiState.Loading//初期状態のため。
 
-            try {
+            try {//はLoadingが画面に描かれるまで待たない！。
                 val leagues =
                     repository.getLeagues()
 
@@ -47,11 +47,11 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
                     )
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (exception: Exception) {
+            } catch (e: Exception) {
                 _uiState.value =
                     MainUiState.Error(
                         message =
-                            exception.message
+                            e.message
                                 ?: "Unknown error"
                     )
             }
@@ -60,23 +60,25 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
     fun loadMatches(
         competitionCode: String
     ) {
-        viewModelScope.launch {//Dispatcherを指定していない＝viewmodelscopeの設定を引き継ぐ
+        viewModelScope.launch {//Dispatcherを指定していない＝ViewmodelScopeの設定を引き継ぐ
             val currentState = _uiState.value
 
-            if (currentState !is MainUiState.Success) {
+            if (currentState !is MainUiState.Success) {//Successと確定させるためらしい。
                 return@launch
             }
 
             val matches = repository.getMatches(
                 competitionCode
-            )//ここでmatchリスト取得
+            )//ここでmatchリスト取得(MatchRepository)
 
-            _uiState.value = currentState.copy(//mainscreenのmainrouteがcollectする。
+            _uiState.value = currentState.copy(//MainScreenのMainRouteがcollectする。
                 matches = matches
-            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→mainroute関数で監視してuiへ流す。
-        }//変数currentstateを持つ理由↓
+            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→MainRoute関数で監視してuiへ流す。
+        }
     }
 }
+
+
 
 //uiState.value
 //= データ
@@ -84,4 +86,4 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
 //
 //currentState
 //= 同じデータを受け取ったもの
-//= is Success の確認後は Success 型として見える
+//= is Success の確認後は Success 型か？として見える
