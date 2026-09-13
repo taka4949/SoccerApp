@@ -156,4 +156,5 @@ MatchRepository
 * [ ] Google Playへの公開
 
 Firebaseは必須とせず、プッシュ通知やクラッシュ情報の収集が必要になった場合に導入を検討します。
+Git practice
 
