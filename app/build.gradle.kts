@@ -94,6 +94,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation("androidx.hilt:hilt-lifecycle-viewmodel-compose:1.3.0")
     ksp(libs.androidx.room.compiler)
 }
 
