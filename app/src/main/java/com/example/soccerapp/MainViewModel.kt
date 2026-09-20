@@ -27,7 +27,7 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
     val uiState: StateFlow<MainUiState> =
         _uiState.asStateFlow()//外部に公開用、ここはデータの更新を直接行わない、使わない。
 
-    init {
+    init {//LaunchedEffectとの違い重要。こっちは変化ないものを使う。再コンポーズでは通信を1回で済ませられる。
         loadData()
     }
 
