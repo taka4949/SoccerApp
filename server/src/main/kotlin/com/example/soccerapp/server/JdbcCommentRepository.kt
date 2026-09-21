@@ -6,72 +6,90 @@ import kotlinx.coroutines.withContext
 
 class JdbcCommentRepository : CommentRepository {
 
-    override suspend fun create(//保存用。この試合にコメントからKtorへ→matchID→結びついているthreadID検索→それを付帯したコメントをテーブルに保存。
+    override suspend fun create(
         matchId: Int,
         request: CreateCommentRequest,
-    ): Comment = withContext(Dispatchers.IO) {//sqlを送ってから待ち時間が発生する。待機時間が発生する処理向けの処理スレッド
+    ): Comment = withContext(Dispatchers.IO) {
         DatabaseFactory.getConnection().use { connection ->
-            val threadId = connection.prepareStatement(//threadID取得。androidはこれを知らない。スレッド管理はKtor側。
-                """
-                SELECT id
-                FROM threads
-                WHERE match_id = ?
-                  AND status = 'OPEN'　
-                ORDER BY number DESC
-                LIMIT 1
-                """.trimIndent()//DESC＝大きい順→最新のスレッドを取得したいから。つまりはコメント数多いもの
-            ).use { statement ->
-                statement.setLong(1, matchId.toLong())//上のSQLへセットする！
+            connection.autoCommit = false
+            try {
+                // Serialize thread creation for this match within the transaction.
+                connection.prepareStatement(
+                    "SELECT pg_advisory_xact_lock(?)"
+                ).use { statement ->
+                    statement.setLong(1, matchId.toLong())
+                    statement.executeQuery().use { result -> result.next() }
+                }
 
-                statement.executeQuery().use { result ->//PostgreSQLへ送る実行、resultは返り値
-                    if (!result.next()) {
-                        error(
-                            "Open thread not found for matchId=$matchId"
+                val existingThreadId = connection.prepareStatement(
+                    """
+                    SELECT id
+                    FROM threads
+                    WHERE match_id = ?
+                      AND status = 'OPEN'
+                    ORDER BY number DESC
+                    LIMIT 1
+                    """.trimIndent()
+                ).use { statement ->
+                    statement.setLong(1, matchId.toLong())
+                    statement.executeQuery().use { result ->
+                        if (result.next()) result.getLong("id") else null
+                    }
+                }
+
+                val threadId = existingThreadId ?: connection.prepareStatement(
+                    """
+                    INSERT INTO threads (match_id, number)
+                    SELECT ?, COALESCE(MAX(number), 0) + 1
+                    FROM threads
+                    WHERE match_id = ?
+                    RETURNING id
+                    """.trimIndent()
+                ).use { statement ->
+                    statement.setLong(1, matchId.toLong())
+                    statement.setLong(2, matchId.toLong())
+                    statement.executeQuery().use { result ->
+                        check(result.next()) { "Created thread was not returned" }
+                        result.getLong("id")
+                    }
+                }
+
+                val comment = connection.prepareStatement(
+                    """
+                    INSERT INTO comments (thread_id, author, content)
+                    VALUES (?, ?, ?)
+                    RETURNING id, created_at
+                    """.trimIndent()
+                ).use { statement ->
+                    statement.setLong(1, threadId)
+                    statement.setString(2, request.author)
+                    statement.setString(3, request.text)
+                    statement.executeQuery().use { result ->
+                        check(result.next()) { "Created comment was not returned" }
+                        Comment(
+                            id = result.getLong("id"),
+                            matchId = matchId,
+                            author = request.author,
+                            text = request.text,
+                            createdAt = result.getTimestamp("created_at")
+                                .toInstant()
+                                .toString(),
                         )
                     }
-
-                    result.getLong("id")
                 }
-            }
 
-            connection.prepareStatement(//コメントの保存
-                """
-                INSERT INTO comments (
-                    thread_id,
-                    author,
-                    content
-                )
-                VALUES (?, ?, ?)
-                RETURNING id, created_at
-                """.trimIndent()//ここでコメントテーブルにコメント追加。VALUESは指定した列へ入れる。RETURNINGはkotlin側へその値を返す。
-            ).use { statement ->
-                statement.setLong(1, threadId)//VALUESの1つ目の内容、以下2～3つ目。
-                statement.setString(2, request.author)
-                statement.setString(3, request.text)
-
-                statement.executeQuery().use { result ->
-                    check(result.next()) {
-                        "Created comment was not returned"
-                    }
-
-                    Comment(//android側に返すために、kotlinデータへ変換する。
-                        id = result.getLong("id"),
-                        matchId = matchId,
-                        author = request.author,
-                        text = request.text,
-                        createdAt = result
-                            .getTimestamp("created_at")//日時、
-                            .toInstant()
-                            .toString(),
-                    )
+                connection.commit()
+                comment
+            } catch (e: Exception) {
+                try {
+                    connection.rollback()
+                } catch (rollbackError: Exception) {
+                    e.addSuppressed(rollbackError)
                 }
+                throw e
             }
         }
     }
-
-
-
-
 
     override suspend fun getByMatchId(//コメント一覧を返す。
         matchId: Int,
