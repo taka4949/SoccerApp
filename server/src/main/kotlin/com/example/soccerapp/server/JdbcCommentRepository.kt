@@ -79,45 +79,50 @@ class JdbcCommentRepository : CommentRepository {
         DatabaseFactory.getConnection().use { connection ->
             connection.prepareStatement(//c=comments.t=threads。ここだけは後に理解。
                 """
-　　　　　　　　　　　SELECT
-   　　　　　　　　　　 c.id,
-   　　　　　　　　　　 t.match_id,
-   　　　　　　　　　　 c.author,
-   　　　　　　　　　　 c.content,
-   　　　　　　　　　　 c.created_at
-　　　　　　　　　　　FROM comments AS c
-　　　　　　　　　　　INNER JOIN threads AS t
-   　　　　　　　　　 ON c.thread_id = t.id
-　　　　　　　　　　　WHERE t.id = (
-   　　　　　　　　　　　 SELECT id
-   　　　　　　　　　　　 FROM threads
-  　　　　　　　　　　　  WHERE match_id = ?
-    　　　　　　　　　　  AND status = 'OPEN'
-  　　　　　　　　　　　  ORDER BY number DESC
-   　　　　　　　　　　　 LIMIT 1
-　　　　　　　　　　　　　　)
-　　　　　　　　　　　　　ORDER BY c.created_at, c.id
-　　　　　　　　　　　　　""".trimIndent()
+SELECT
+    c.id,
+    t.match_id,
+    c.author,
+    c.content,
+    c.created_at
+FROM comments AS c
+INNER JOIN threads AS t
+    ON c.thread_id = t.id
+WHERE t.id = (
+    SELECT id
+    FROM threads
+    WHERE match_id = ?
+      AND status = 'OPEN'
+    ORDER BY number DESC
+    LIMIT 1
+)
+ORDER BY c.created_at, c.id
+""".trimIndent()
             ).use { statement ->
                 statement.setLong(1, matchId.toLong())
 
-                statement.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(
-                                Comment(
-                                    id = result.getLong("id"),
-                                    matchId = result.getInt("match_id"),
-                                    author = result.getString("author"),
-                                    text = result.getString("content"),
-                                    createdAt = result
-                                        .getTimestamp("created_at")
-                                        .toInstant()
-                                        .toString(),
+                try {
+                    statement.executeQuery().use { result ->
+                        buildList {
+                            while (result.next()) {
+                                add(
+                                    Comment(
+                                        id = result.getLong("id"),
+                                        matchId = result.getInt("match_id"),
+                                        author = result.getString("author"),
+                                        text = result.getString("content"),
+                                        createdAt = result
+                                            .getTimestamp("created_at")
+                                            .toInstant()
+                                            .toString(),
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    throw e
                 }
             }
         }

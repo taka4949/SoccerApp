@@ -18,6 +18,7 @@ fun Route.commentRoutes(
         get {//掲示板を開くときに動く用の関数
             val matchId = call.parameters["matchId"]?.toIntOrNull()//callが引数の役割を果たす。application.ktからurlとつながったcallがくる。
 
+
             if (matchId == null) {
                 call.respond(
                     HttpStatusCode.BadRequest,
@@ -26,12 +27,21 @@ fun Route.commentRoutes(
                 return@get
             }
 
-            val comments = commentRepository.getByMatchId(matchId)
+            println("GET comments: matchId=$matchId")
 
-            call.respond(
-                HttpStatusCode.OK,
-                comments
-            )
+            try {
+                val comments = commentRepository.getByMatchId(matchId)
+
+                println("GET comments success: ${comments.size}")
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    comments
+                )
+            } catch (e: Exception) {
+                println("GET comments failed: ${e::class.qualifiedName}: ${e.message}")
+                throw e
+            }
         }
 
 
