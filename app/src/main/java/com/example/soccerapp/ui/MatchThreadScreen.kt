@@ -1,5 +1,6 @@
 package com.example.soccerapp.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -8,11 +9,16 @@ import com.example.soccerapp.ui.screen.MatchThreadRoute
 import com.example.soccerapp.ui.state.MatchThreadUiState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fitInside
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun  MatchThreadScreen(
@@ -68,10 +75,41 @@ fun CommentSection(
             LazyColumn(
                 modifier = modifier//weight(1f)
             ) {
-                items(uiState.comments) { comment ->
-                    Text(
-                        text = comment.text
-                    )
+                items(uiState.comments,
+                    key = {it.id}//commentId→見分けられる
+                ) { comment ->
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            Text(
+                                text = comment.author,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = comment.createdAt,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+
+
+                        Text(
+                            text = comment.text,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
                 }
             }
         }
@@ -105,11 +143,11 @@ fun CommentPostSection(
     onPostComment: (String, String) -> Unit
 ) {
     var author by rememberSaveable {
-        mutableStateOf("")//Tと打てば、StateOfがTを持ち→rememberが記憶→再コンポーズ
+        mutableStateOf("")//Tと打てば、StateOfがTを持ち→rememberが記憶→再コンポーズ→TがUIに表示
     }
 
     var text by rememberSaveable {
-        mutableStateOf("")
+        mutableStateOf("")//stateがComposeRuntimeに通知？（深堀のちほど）
     }
 
     OutlinedTextField(
