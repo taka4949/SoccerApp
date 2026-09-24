@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable//json変換コードを生成する
 data class CompetitionDto(//変換後の値を入れる。
     val id : Int,
     val name : String,
-    val code : String
+    val code : String,
+    val emblem :String? = null
 )

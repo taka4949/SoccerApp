@@ -1,17 +1,16 @@
 package com.example.soccerapp.ui
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.runtime.Composable
-import com.example.soccerapp.data.model.League
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
-import androidx.compose.foundation.clickable
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.example.soccerapp.data.model.Match
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.HorizontalDivider
@@ -19,56 +18,73 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import coil3.compose.AsyncImage
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+
 
 @Composable
-fun LeagueListScreen(
-    leagues: List<League>,
-    onLeagueClick : (String) -> Unit
+fun MatchListScreen(
+    matches: List<Match>,
+    onMatchClick: (Int) -> Unit
 ) {
     LazyColumn(
         contentPadding = PaddingValues(
             vertical = 8.dp
         )
     ) {
-        items(leagues) { league ->
+
+        items(matches) { match ->
             Column {//縦
                 Row(//横
                     modifier = Modifier
-                        .fillMaxWidth()//横幅いっぱい（順番大事、横幅→クリックも余白に有効→縦と横に余白）
+                        .fillMaxWidth()
                         .clickable {
-                            onLeagueClick(league.id)//loadMatch()へ→Repository→試合データもってくる。
+                            onMatchClick(match.id)
                         }
                         .padding(
-                            horizontal = 20.dp,
+                            horizontal = 20.dp,//←20dp  [Rowの中身]  20dp→
                             vertical = 16.dp
                         ),
-                    verticalAlignment = Alignment.CenterVertically//Row内の部品を中央へ寄せる。
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
                     AsyncImage(//ロゴ
-                        model = league.emblem,
+                        model = match.homeTeamCrest,
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(68.dp)
-                            .padding(end = 20.dp)
-
+                        modifier = Modifier.size(35.dp)
                     )
 
                     Text(
-                        text = league.name,
+                        text = "${match.homeTeam} vs ${match.awayTeam}",
                         modifier = Modifier
-                            .weight(1f)//これは余白を使う。
-                            .padding(end = 12.dp),
+                            .padding(horizontal = 15.dp)
+                            .widthIn(max = 220.dp),//横幅の制限つけないとクラブ名を...に略せない。
                         style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,//一行に収める
-                        overflow = TextOverflow.Ellipsis//長文は...に省略。
+                        overflow = TextOverflow.Ellipsis
                     )
+                }
+
+                    AsyncImage(
+                        model = match.awayTeamCrest,
+                        contentDescription = null,
+                        modifier = Modifier.size(35.dp)
+                    )
+
+                    Spacer(
+                        modifier = Modifier.weight(1f)//これは余った余白を使う。
+                    )
+
+
                     Text(
                         text = ">"
                     )
                 }
+
+
 
                 HorizontalDivider(//区切る線
                     modifier = Modifier.padding(start = 20.dp),
@@ -76,9 +92,10 @@ fun LeagueListScreen(
                     color = MaterialTheme.colorScheme.outlineVariant
                 )
             }
-        }
+    }
     }
 
-}
+
+
 
 //modifier=Composable関数自体への設定

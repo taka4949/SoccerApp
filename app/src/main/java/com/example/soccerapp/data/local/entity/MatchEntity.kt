@@ -13,7 +13,9 @@ data class MatchEntity(
     val homeScore: Int?,
     val awayScore: Int?,
     val utcDate: String,
-    val status: String
+    val status: String,
+    val homeTeamCrest: String?,
+    val awayTeamCrest: String?,
 )
 
 

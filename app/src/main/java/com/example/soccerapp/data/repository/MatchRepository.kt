@@ -30,7 +30,8 @@ class MatchRepository@Inject constructor(
         return competitions.map { competition ->//compのdtoをList＜league>に変換してる
             League(
                 id = competition.code,
-                name = competition.name
+                name = competition.name,
+                emblem = competition.emblem
             )
         }
 
@@ -48,9 +49,9 @@ class MatchRepository@Inject constructor(
                 status = "SCHEDULED" // 未定の試合のみ
             )
 
-            val matches = response.matches // APIから取得
+            val matches = response.matches // APIから取得(Dto)
 
-            val matchEntities = matches.map { match ->
+            val matchEntities = matches.map { match ->//Dto→Entities
                 MatchEntity(
                     id = match.id,
                     leagueId = match.competition.code,
@@ -59,13 +60,15 @@ class MatchRepository@Inject constructor(
                     homeScore = match.score.fullTime.home,
                     awayScore = match.score.fullTime.away,
                     utcDate = match.utcDate,
-                    status = match.status
+                    status = match.status,
+                    homeTeamCrest = match.homeTeam.crest,
+                    awayTeamCrest = match.awayTeam.crest,
                 )
             }
 
             matchDao.upsertMatches(matchEntities) // Roomへ保存、更新
 
-            matches.map { match ->
+            matches.map { match ->//Dto→Match.ktへ
                 Match(
                     id = match.id,
                     leagueId = match.competition.code,
@@ -74,7 +77,9 @@ class MatchRepository@Inject constructor(
                     homeScore = match.score.fullTime.home,
                     awayScore = match.score.fullTime.away,
                     utcDate = match.utcDate,
-                    status = match.status
+                    status = match.status,
+                    homeTeamCrest = match.homeTeam.crest,
+                    awayTeamCrest = match.awayTeam.crest,
                 ) // ここで依存関係を切り離す。UI用データMatch.ktを通して送る。
             }
 
@@ -87,9 +92,9 @@ class MatchRepository@Inject constructor(
         } catch (e: Exception) {
             val cachedMatches = matchDao.getMatchesByLeague(
                 competitionCode
-            ) // 通信失敗時にRoomから取得
+            ) // 通信失敗時にRoomから取得=getMatchesByLeague()
 
-            cachedMatches.map { match ->
+            cachedMatches.map { match ->//Entities→Match.ktへ
                 Match(
                     id = match.id,
                     leagueId = match.leagueId,
@@ -98,8 +103,10 @@ class MatchRepository@Inject constructor(
                     homeScore = match.homeScore,
                     awayScore = match.awayScore,
                     utcDate = match.utcDate,
-                    status = match.status
-                ) // MatchEntityからUI用のMatchへ変換
+                    status = match.status,
+                    homeTeamCrest = match.homeTeamCrest,
+                    awayTeamCrest = match.awayTeamCrest,
+                )
             }
         }
     }

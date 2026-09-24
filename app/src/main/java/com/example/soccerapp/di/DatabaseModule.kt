@@ -10,21 +10,24 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.example.soccerapp.data.local.database.MIGRATION_1_2
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DatabaseModule {//objectとは、1個だけ使うという意味。これはここしか存在する必要がない。api
+object DatabaseModule {//objectとは、1個だけ。
 
-    @Provides//下に書く関数がかえすものをhiltに登録する
+    @Provides//下に書く関数がかえすものをhiltに登録する(外部ライブラリのため、Provides)
     @Singleton
     fun provideSoccerDatabase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context// DBの保存領域をAndroidに特定させるため
     ): SoccerDatabase {
         return Room.databaseBuilder(
             context,
             SoccerDatabase::class.java,//クラスの設計を渡している。
             "soccer_database"//端末内に作成するSQLiteデータベースファイルの名前
-        ).build()//↑どの保存先をどのデータベース設計で使うのかを設定している。
+        )
+            .addMigrations(MIGRATION_1_2)
+            .build()//↑どの保存先をどのデータベース設計で使うのかを設定している。
     }
 
     @Provides
@@ -43,7 +46,7 @@ object DatabaseModule {//objectとは、1個だけ使うという意味。これ
 //流れ。①MatchRepository
 //「MatchDaoが必要」
 //↓
-//Hilt
+//Hilt(注意：hiltは返り値を見て、引数で何が必要なのかを見て、辿る）
 //「DatabaseModuleに用意方法がある」
 //↓
 //provideMatchDao()を使う

@@ -8,5 +8,8 @@ data class Match(//dtoからくるデータをui用として受け取る。dto�
     val homeScore: Int?,//null許容。試合前は0ではなくnull。
     val awayScore: Int?,
     val utcDate: String,
-    val status: String
+    val status: String,
+    val homeTeamCrest: String?,
+    val awayTeamCrest: String?,
+
 )
