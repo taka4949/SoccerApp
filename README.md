@@ -175,25 +175,20 @@ Compose UI
 * [x] football-data.orgとのAPI連携
 * [x] Roomへの試合情報保存
 * [x] 通信失敗時のキャッシュ表示
-* [ ] キャッシュの最終更新時刻を保存
 * [x] Ktorによる掲示板API
 * [x] PostgreSQLへのコメント保存・取得
 * [x] Androidから掲示板APIへの通信処理
 * [x] コメント画面のViewModel・UiState
-* [ ] 試合ごとのコメント一覧
-* [ ] コメント投稿機能
-* [ ] ユーザー管理
-* [ ] ユーザー認証
+* [x] Ktor APIテスト
+* [ ] 試合ごとのコメント一覧・投稿機能をCompose UIへ接続
 * [ ] ViewModel・Repository・Roomのテスト
 * [ ] Compose UIテスト
-* [x] Ktor APIテスト
+* [ ] ユーザー認証・ログイン機能
+* [ ] 新しいコメントスレッドを作成する機能
+* [ ] WebSocketによるコメントのリアルタイム更新
 * [ ] Dockerによる開発環境の構築
-* [ ] GitHub Actionsによるビルド・テストの自動化
+* [ ] GitHub ActionsによるCI/CD
 * [ ] UIとアプリアイコンの改善
 * [ ] Google Playへの公開
 
-
 Firebaseは必須とせず、プッシュ通知やクラッシュ情報の収集が必要になった場合に導入を検討します。
-Git practice
-
-
