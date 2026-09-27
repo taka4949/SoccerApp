@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 
 
 
-//NEWっていう部分は新規部分、のちに理解。9/22→
+
 //既存のIDがあれば使う。null なら新しいスレッドを作り、そのIDを使う、という変更ではある。9/22
 class JdbcCommentRepository : CommentRepository {
 
@@ -15,15 +15,15 @@ class JdbcCommentRepository : CommentRepository {
     ): Comment = withContext(Dispatchers.IO) {//sqlを送ってから待ち時間が発生する。待機時間が発生する処理向けの処理スレッド
         DatabaseFactory.getConnection().use { connection ->
             connection.autoCommit = false // NEW
-            try { // NEW
-                //
+            try {
+
                 connection.prepareStatement(
                     "SELECT pg_advisory_xact_lock(?)"
                 ).use { statement ->
                     statement.setLong(1, matchId.toLong())
                     statement.executeQuery().use { result -> result.next() }
                 }
-                // NEW END
+
 
                 // NEW: the lookup may return null
                 val existingThreadId = connection.prepareStatement(//threadID取得。androidはこれを知らない。スレッド管理はKtor側。
@@ -39,11 +39,11 @@ class JdbcCommentRepository : CommentRepository {
                     statement.setLong(1, matchId.toLong())//上のSQLへセットする！
 
                     statement.executeQuery().use { result ->//PostgreSQLへ送る実行、resultは返り値
-                        if (result.next()) result.getLong("id") else null // NEW
+                        if (result.next()) result.getLong("id") else null
                     }
                 }
 
-                // NEW START: create a thread only when the lookup returned null
+                // NEW START
                 val threadId = existingThreadId ?: connection.prepareStatement(
                     """
                 INSERT INTO threads (match_id, number)
@@ -60,9 +60,9 @@ class JdbcCommentRepository : CommentRepository {
                         result.getLong("id")
                     }
                 }
-                // NEW END
 
-                // NEW: hold the created comment until commit
+
+
                 val comment = connection.prepareStatement(//コメントの保存
                     """
                 INSERT INTO comments (
@@ -96,17 +96,17 @@ class JdbcCommentRepository : CommentRepository {
                     }
                 }
 
-                connection.commit() // NEW
-                comment // NEW
+                connection.commit()
+                comment
             } catch (e: Exception) {
-                // NEW START: discard the thread if comment insertion fails
+
                 try {
                     connection.rollback()
                 } catch (rollbackError: Exception) {
                     e.addSuppressed(rollbackError)
                 }
                 throw e
-                // NEW END
+
             }
         }
     }

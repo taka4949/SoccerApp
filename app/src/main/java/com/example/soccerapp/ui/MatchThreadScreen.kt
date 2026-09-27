@@ -236,8 +236,6 @@ fun CommentPostSection(
                     text
                 )
 
-                author = ""
-                text = ""
             }
         }
     ) {
