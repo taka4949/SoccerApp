@@ -47,6 +47,14 @@ class MatchThreadViewModel @Inject constructor(
     }
 
 
+    fun onTextChange(newText: String) {//コメント投稿中の状態保持
+        val currentState = _uiState.value as? MatchThreadUiState.Success
+            ?: return
+
+        _uiState.value = currentState.copy(text = newText)
+    }
+
+
     fun postComment(//コメント投稿用
         matchId: Int,
         author: String,
@@ -73,7 +81,7 @@ class MatchThreadViewModel @Inject constructor(
                     comments = currentState.comments + comment,
                     author = author,
                     text = "",
-                    isPosting = false,//サーバー通信成功だからfalse→ここでする理由は、このファイル内でisPostingの状態を管理
+                    isPosting = false,//サーバー通信成功。false→ここでする理由は、このファイル内でisPostingの状態を管理
                     postErrorMessage = null
                 )
             } catch (e: CancellationException) {

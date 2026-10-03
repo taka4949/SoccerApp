@@ -193,16 +193,17 @@ fun CommentSection(
 
 @Composable
 fun CommentPostSection(
+    text: String,
+    onTextChange: (String) -> Unit,
     isPosting: Boolean,
+    postErrorMessage: String?,
     onPostComment: (String, String) -> Unit
 ) {
     var author by rememberSaveable {
         mutableStateOf("")//Tと打てば、StateOfがTを持ち→rememberが記憶→再コンポーズ→TがUIに表示
     }
 
-    var text by rememberSaveable {
-        mutableStateOf("")//stateがComposeRuntimeに通知？（深堀のちほど）
-    }
+
 
     OutlinedTextField(
         value = author,
@@ -216,13 +217,19 @@ fun CommentPostSection(
 
     OutlinedTextField(
         value = text,
-        onValueChange = { newText ->
-            text = newText
-        },
+        onValueChange = onTextChange,//onValueChange（中身は関数）に入る。→ViewModel→Route→再描画
         label = {
             Text("Comment")
         }
     )
+
+    if (postErrorMessage != null) {
+        Text(
+            text = postErrorMessage,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+
 
     Button(
         onClick = {

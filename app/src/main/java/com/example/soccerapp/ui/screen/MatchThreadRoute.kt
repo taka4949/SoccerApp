@@ -20,7 +20,7 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
     val viewModel: MatchThreadViewModel = hiltViewModel()
 
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()//ViewModelのval uiStateから
 
 
     val isPosting = (uiState as? MatchThreadUiState.Success)?.isPosting ?: false
@@ -41,6 +41,10 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
     )
 
     CommentPostSection(
+        text = (uiState as? MatchThreadUiState.Success)?.text ?: "",
+        postErrorMessage =
+            (uiState as? MatchThreadUiState.Success)?.postErrorMessage,
+        onTextChange = viewModel::onTextChange,
         isPosting = isPosting,
         onPostComment = { author, text ->
             viewModel.postComment(
@@ -49,14 +53,15 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
                 text = text
             )
         }
+
+
     )
 }
 
 
+//入れ子のUiStateからsuccessの中身を取得できない→確認して確定させる必要がある。
 
 
-
-//owner = ViewModelを誰に所属させて、いつまで保持するか（深堀必須、将来的）
-//
+//owner = ViewModelを誰に所属させて、いつまで保持するか→それがNaviになってる。（コメント機能）
 //Factory = ViewModelをどうやって生成するか
 //Activity内→hilt対応,BackstackEntry内→デフォルトになる。hiltViewModelと明示する必要がある！。
