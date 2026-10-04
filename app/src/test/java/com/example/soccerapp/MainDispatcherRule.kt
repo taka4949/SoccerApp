@@ -31,7 +31,7 @@ class MainDispatcherRule(
 
 //Dispatchers.Main を使うCoroutineをローカルUnit Testで動かすときに使うRule
 
-//viewModelScope は基本的に Dispatchers.Main を使う↓（本来）
+//viewModelScope では基本的に Dispatchers.Main を使う↓（本来）
 
 //MatchThreadViewModel
 //    ↓

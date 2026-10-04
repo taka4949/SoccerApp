@@ -193,27 +193,23 @@ fun CommentSection(
 
 @Composable
 fun CommentPostSection(
+    author: String,
     text: String,
+    onAuthorChange: (String) -> Unit,
     onTextChange: (String) -> Unit,
     isPosting: Boolean,
     postErrorMessage: String?,
     onPostComment: (String, String) -> Unit
 ) {
-    var author by rememberSaveable {
-        mutableStateOf("")//Tと打てば、StateOfがTを持ち→rememberが記憶→再コンポーズ→TがUIに表示
-    }
 
 
 
     OutlinedTextField(
         value = author,
-        onValueChange = { newAuthor ->
-            author = newAuthor
-        },
-        label = {
-            Text("Name")
-        }
+        onValueChange = onAuthorChange,
+        label = { Text("Name") }
     )
+
 
     OutlinedTextField(
         value = text,

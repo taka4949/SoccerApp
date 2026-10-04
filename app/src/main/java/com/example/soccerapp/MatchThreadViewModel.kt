@@ -47,12 +47,24 @@ class MatchThreadViewModel @Inject constructor(
     }
 
 
+    fun onAuthorChange(newAuthor: String) {
+        val currentState = _uiState.value as? MatchThreadUiState.Success
+            ?: return
+
+        _uiState.value = currentState.copy(
+            author = newAuthor
+        )
+    }
+
+
     fun onTextChange(newText: String) {//コメント投稿中の状態保持
         val currentState = _uiState.value as? MatchThreadUiState.Success
             ?: return
 
         _uiState.value = currentState.copy(text = newText)
     }
+
+
 
 
     fun postComment(//コメント投稿用
@@ -63,11 +75,17 @@ class MatchThreadViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState =
                 _uiState.value as? MatchThreadUiState.Success
-                    ?: return@launch//post時はコメ欄在り→成功状態のはずだが、それ以外なら関数終了（保険）
+                    ?: return@launch
 
-            _uiState.value = currentState.copy(//コメント登校中UI用(trueにすることで投稿ボタン連打禁止
+
+            if (currentState.isPosting) {
+                return@launch
+            }
+
+
+            _uiState.value = currentState.copy(//コメント登校中UI用(投稿ボタン連打禁止)
                 isPosting = true,
-                postErrorMessage = null//保険（エラー→再ポスト時にnullに更新できる）
+                postErrorMessage = null
             )
 
             try {
@@ -81,7 +99,7 @@ class MatchThreadViewModel @Inject constructor(
                     comments = currentState.comments + comment,
                     author = author,
                     text = "",
-                    isPosting = false,//サーバー通信成功。false→ここでする理由は、このファイル内でisPostingの状態を管理
+                    isPosting = false,//サーバー通信成功。false→このファイル内でisPostingの状態を管理
                     postErrorMessage = null
                 )
             } catch (e: CancellationException) {

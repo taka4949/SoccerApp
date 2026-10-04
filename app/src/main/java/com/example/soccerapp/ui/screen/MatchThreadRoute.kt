@@ -41,10 +41,12 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
     )
 
     CommentPostSection(
+        author = (uiState as? MatchThreadUiState.Success)?.author ?: "",
         text = (uiState as? MatchThreadUiState.Success)?.text ?: "",
+        onAuthorChange = viewModel::onAuthorChange,
+        onTextChange = viewModel::onTextChange,
         postErrorMessage =
             (uiState as? MatchThreadUiState.Success)?.postErrorMessage,
-        onTextChange = viewModel::onTextChange,
         isPosting = isPosting,
         onPostComment = { author, text ->
             viewModel.postComment(
