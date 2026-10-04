@@ -12,6 +12,11 @@ interface SoccerRepository {
         competitionCode: String
     ): List<Match>
 
+
+    suspend fun getMatchById(
+        matchId: Int
+    ): Match?
+
 }
 
 

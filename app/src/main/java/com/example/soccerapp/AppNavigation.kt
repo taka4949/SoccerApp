@@ -10,14 +10,19 @@ import com.example.soccerapp.ui.LeagueListScreen
 import com.example.soccerapp.ui.MatchThreadScreen
 import androidx.compose.material3.Text
 import com.example.soccerapp.ui.MatchListScreen
+import com.example.soccerapp.ui.screen.MatchDetailRoute
 
 @Composable
 fun AppNavigation(
     leagues: List<League>,
     matches: List<Match>,
     onLeagueSelected: (String) -> Unit//この関数と引数で返り値は無し、というセットを下に渡す。
-) {
+)
+
+{
     val navController = rememberNavController()//naviはスタック、変遷の履歴を記録する。戻ることが可能へ
+
+
 
     NavHost(
         navController = navController,
@@ -33,6 +38,9 @@ fun AppNavigation(
             )
         }
 
+
+
+
         composable(route = "league/{leagueId}") { backStackEntry ->
             val leagueId = requireNotNull(
                 backStackEntry.arguments?.getString("leagueId")
@@ -41,31 +49,28 @@ fun AppNavigation(
             val leagueMatches = matches.filter { match ->
                 match.leagueId == leagueId//二重チェックしている。既にapi側（ApiService)で選別済み。
             }
-            MatchListScreen(//リーグ内の試合リスト(ここですべての試合を表示している！！！！！！）
+            MatchListScreen(//リーグ内の試合リスト
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
                     navController.navigate("match/$matchId")//.navigate()は保存。試合をタップが下のトリガー。
                 }//マッチクリックしたら、navigate()にマッチIｄをいれて下の関数↓が動く。
             )
         }
+
+
+
+
         composable(route = "match/{matchId}") { backStackEntry ->
             val matchId = requireNotNull(
                 backStackEntry.arguments?.getString("matchId")
-            ).toInt()//バックスタックから存在するmatchIDをコピーして取得している。
+            ).toInt()//バックスタックからmatchIDを取得している。
 
 
-            val selectedMatch = matches.firstOrNull { match ->
-                match.id == matchId
-            }
-
-            if (selectedMatch == null) {
-                Text(
-                    text = "Loading..."
-                )
-            } else
-            MatchThreadScreen(//1試合の詳細情報
-                match = selectedMatch
+            MatchDetailRoute(
+                matchId = matchId
             )
+
+
         }
     }
 }

@@ -24,8 +24,7 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
 
 
     val isPosting = (uiState as? MatchThreadUiState.Success)?.isPosting ?: false
-    //↑これの別の書き方→smart.castできない→val uiStateは固定ではない→一度確認しても二度目は保証できない、とざっくり理解で留めておく。
-    //Success→isPosting取得、それ以外→is~が存在しないため、false
+
 
 
 

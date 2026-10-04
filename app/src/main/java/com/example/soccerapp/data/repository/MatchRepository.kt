@@ -10,9 +10,7 @@ import com.example.soccerapp.data.remote.api.SoccerApiService
 import kotlinx.coroutines.CancellationException
 
 
-//なぜ必要か？データの仕入れ先が将来どう変わっても、ViewModelや画面のコードを1行も書き直さなくて済むようにするため
-//retrofitなどからデータをとる際に、viewmodel内にロジックを書くと複雑なファイルになってしまう。
-//テストを簡単に実行するため。リポジトリがあることであらゆるパターンの安全確認が可能。
+
 
 
 
@@ -109,5 +107,28 @@ class MatchRepository@Inject constructor(
                 )
             }
         }
+    }
+
+
+
+    override suspend fun getMatchById(
+        matchId: Int
+    ): Match? {
+
+        val match = matchDao.getMatchById(matchId)
+            ?: return null
+
+        return Match(
+            id = match.id,
+            leagueId = match.leagueId,
+            homeTeam = match.homeTeam,
+            awayTeam = match.awayTeam,
+            homeScore = match.homeScore,
+            awayScore = match.awayScore,
+            utcDate = match.utcDate,
+            status = match.status,
+            homeTeamCrest = match.homeTeamCrest,
+            awayTeamCrest = match.awayTeamCrest
+        )
     }
 }

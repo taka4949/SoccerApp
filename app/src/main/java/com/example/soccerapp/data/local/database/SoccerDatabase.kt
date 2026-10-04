@@ -12,8 +12,20 @@ import com.example.soccerapp.data.local.entity.MatchEntity
 )
 abstract class SoccerDatabase : RoomDatabase() {//soccer_databaseというSQLiteファイルとの接続管理
 
-    abstract fun matchDao(): MatchDao//SQLiteへ保存する方法（ここには｛｝←処理内容がない）
+    abstract fun matchDao(): MatchDao//SQLiteへ保存する方法
 }
+
+
+
+
+
+
+
+
+
+
+
+
 //SoccerDatabase←RoomDatabaseを継承している。これがsqliteとの接続やデータベースを開く、閉じる機能を継承。
 //↓
 //特定のSQLiteファイルへ接続している

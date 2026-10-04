@@ -49,6 +49,15 @@ class MatchThreadViewModelTest {
         advanceUntilIdle()
 
 
+        viewModel.onTextChange("Second")
+
+        val inputState =
+            viewModel.uiState.value as MatchThreadUiState.Success
+
+        assertEquals("Second", inputState.text)
+
+
+
         viewModel.postComment(
             matchId = 1,
             author = "TABATA",

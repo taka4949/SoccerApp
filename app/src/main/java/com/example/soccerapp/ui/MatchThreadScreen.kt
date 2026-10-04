@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.AsyncImage
 
@@ -205,15 +206,19 @@ fun CommentPostSection(
 
 
     OutlinedTextField(
+        modifier = Modifier.testTag("author_input"),
         value = author,
         onValueChange = onAuthorChange,
+        enabled = !isPosting,
         label = { Text("Name") }
     )
 
 
     OutlinedTextField(
+        modifier = Modifier.testTag("comment_input"),
         value = text,
         onValueChange = onTextChange,//onValueChange（中身は関数）に入る。→ViewModel→Route→再描画
+        enabled = !isPosting,
         label = {
             Text("Comment")
         }
@@ -228,21 +233,16 @@ fun CommentPostSection(
 
 
     Button(
+        modifier = Modifier.testTag("post_button"),
         onClick = {
-            if (
-                author.isNotBlank() &&
-                text.isNotBlank() &&
-                !isPosting//ポスト中ではない時に、投稿可能
-            ) {
-                onPostComment(
-                    author,
-                    text
-                )
-
-            }
-        }
+            onPostComment(author, text)
+        },
+        enabled =
+            author.isNotBlank() &&
+                    text.isNotBlank() &&
+                    !isPosting
     ) {
-        Text("Post")//ボタンの真ん中に書いてある。
+        Text("Post")//ボタンの真ん中に書いてある。関数の最後の引数がラムダ→（）の外に出せる。
     }
 }
 
