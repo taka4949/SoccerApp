@@ -26,7 +26,7 @@ class MatchThreadViewModelTest {
 
         val viewModel = MatchThreadViewModel(repository)//MatchThreadViewmodelはFakeを利用。
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()//Coroutineの非同期処理をスキップ
 
         val state = viewModel.uiState.value as MatchThreadUiState.Success//StateFlowから現在値を取り出す
@@ -34,6 +34,43 @@ class MatchThreadViewModelTest {
         assertEquals(1, state.comments.size)
 
         assertEquals("Hello", state.comments[0].text)
+    }
+
+
+    @Test
+    fun loadInitialComments_sameMatch_doesNotReloadOrClearDraft() = runTest {
+        val repository = FakeCommentRepository()
+        val viewModel = MatchThreadViewModel(repository)
+
+        viewModel.loadInitialComments(1)
+        advanceUntilIdle()
+
+        viewModel.onAuthorChange("TABATA")
+        viewModel.onTextChange("Second")
+
+        viewModel.loadInitialComments(1)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value as MatchThreadUiState.Success
+
+        assertEquals(1, repository.getCommentsCallCount)
+        assertEquals("TABATA", state.author)
+        assertEquals("Second", state.text)
+    }
+
+
+    @Test
+    fun retryComments_runsRequestAgain() = runTest {
+        val repository = FakeCommentRepository()
+        val viewModel = MatchThreadViewModel(repository)
+
+        viewModel.loadInitialComments(1)
+        advanceUntilIdle()
+
+        viewModel.retryComments(1)
+        advanceUntilIdle()
+
+        assertEquals(2, repository.getCommentsCallCount)
     }
 
 
@@ -45,7 +82,7 @@ class MatchThreadViewModelTest {
         val repository = FakeCommentRepository()
         val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()
 
 
@@ -88,7 +125,7 @@ fun postComment_failure() = runTest {
 
     val viewModel = MatchThreadViewModel(repository)
 
-    viewModel.loadComments(1)
+    viewModel.loadInitialComments(1)
     advanceUntilIdle()
 
 
@@ -117,7 +154,7 @@ fun postComment_failure() = runTest {
         val repository = FakeCommentRepository()
         val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -139,7 +176,7 @@ fun postComment_failure() = runTest {
 
         val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -182,7 +219,7 @@ fun postComment_failure() = runTest {
 
         val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -220,7 +257,7 @@ fun postComment_failure() = runTest {
 
         val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        viewModel.loadInitialComments(1)
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -263,10 +300,13 @@ private class FakeCommentRepository(
     val allowPostToComplete = CompletableDeferred<Unit>()
 
     var createCommentCallCount = 0
+    var getCommentsCallCount = 0
 
     override suspend fun getComments(
         matchId: Int
     ): List<Comment> {
+        getCommentsCallCount++
+
         return listOf(
             Comment(
                 id = 1L,
