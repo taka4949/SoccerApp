@@ -29,13 +29,13 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
 
 
     LaunchedEffect(matchId) {//initとの違い。こちらはComposable内で動く→変化するデータを扱う点でinitと違う。
-        viewModel.loadComments(matchId)//get関数
+        viewModel.loadInitialComments(matchId)//get関数
     }
 
     CommentSection(
         matchId = matchId,
         uiState = uiState,
-        onRetry = viewModel::loadComments,
+        onRetry = viewModel::retryComments,
         modifier = Modifier.weight(1f)//columnの余分な部分を使える
     )
 
