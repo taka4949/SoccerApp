@@ -9,7 +9,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -25,8 +24,22 @@ class MatchThreadViewModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()//外部
 
+    private var loadedMatchId: Int? = null
 
-    fun loadComments(matchId: Int) {//コメ欄ゲット
+    fun loadInitialComments(matchId: Int) {
+        if (loadedMatchId == matchId) {
+            return
+        }
+
+        loadedMatchId = matchId
+        loadComments(matchId)
+    }
+
+    fun retryComments(matchId: Int) {
+        loadComments(matchId)
+    }
+
+    private fun loadComments(matchId: Int) {
         viewModelScope.launch {
             _uiState.value = MatchThreadUiState.Loading
 
