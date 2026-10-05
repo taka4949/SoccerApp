@@ -38,6 +38,11 @@ import coil3.compose.AsyncImage
 fun MatchThreadScreen(
     match: Match
 ) {
+
+    println("MatchThreadScreen recomposed")
+
+
+
     Column {
 
         Row(
@@ -105,14 +110,13 @@ fun MatchThreadScreen(
 
         HorizontalDivider()
 
-        MatchThreadRoute(match.id)
+        MatchThreadRoute()
     }
 }
 @Composable
 fun CommentSection(
-    matchId : Int,
     uiState : MatchThreadUiState,
-    onRetry : (Int) -> Unit,
+    onRetry : () -> Unit,
     modifier: Modifier = Modifier
     ){
 
@@ -180,7 +184,7 @@ fun CommentSection(
 
                 Button(
                     onClick = {
-                        onRetry(matchId)
+                        onRetry()
                     }
                 ) {
                     Text(
@@ -251,12 +255,3 @@ fun CommentPostSection(
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun CommentSectionLoadingPreview() {
-    CommentSection(
-        matchId = 1,
-        uiState = MatchThreadUiState.Loading,
-        onRetry = {}
-    )
-}

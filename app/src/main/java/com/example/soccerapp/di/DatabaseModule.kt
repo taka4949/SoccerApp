@@ -10,11 +10,13 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.example.soccerapp.data.local.dao.LeagueDao
 import com.example.soccerapp.data.local.database.MIGRATION_1_2
+import com.example.soccerapp.data.local.database.MIGRATION_2_3
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DatabaseModule {//objectとは、1個だけ。
+object DatabaseModule {//objectとは、1個。
 
     @Provides//下に書く関数がかえすものをhiltに登録する(外部ライブラリのため、Provides)
     @Singleton
@@ -26,7 +28,10 @@ object DatabaseModule {//objectとは、1個だけ。
             SoccerDatabase::class.java,//クラスの設計を渡している。
             "soccer_database"//端末内に作成するSQLiteデータベースファイルの名前
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(
+                MIGRATION_1_2,
+                MIGRATION_2_3
+            )
             .build()//↑どの保存先をどのデータベース設計で使うのかを設定している。
     }
 
@@ -37,7 +42,20 @@ object DatabaseModule {//objectとは、1個だけ。
     ): MatchDao {
         return database.matchDao()
     }
+
+
+    @Provides
+    @Singleton
+    fun provideLeagueDao(
+        database: SoccerDatabase
+    ): LeagueDao {
+        return database.leagueDao()
+    }
 }
+
+
+
+
 
 //このファイルの役割
 //1. SoccerDatabaseは、この方法で用意する

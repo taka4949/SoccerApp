@@ -11,28 +11,34 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+
+
+
 @HiltViewModel
-class MainViewModel @Inject constructor(//自分でリポジトリは書かない。外から受け取る（hilt)
-    private val repository : SoccerRepository//ここはインターフェース
+class MainViewModel @Inject constructor(
+    private val repository : SoccerRepository,
 ) : ViewModel(){//viewmodelScopeやライフサイクル管理、再描画時の画面保持の継承を継承している（クラス）
 
 
-    // 「内部書き換え用（Mutable）」と「外部公開用（読み取り専用）
-    //２つに分ける理由は、UI側からleaguesなどのデータを変更させないため。バグ防止。
+
     private val _uiState =
         MutableStateFlow<MainUiState>(
             MainUiState.Loading
         )
 
     val uiState: StateFlow<MainUiState> =
-        _uiState.asStateFlow()//外部に公開用、ここはデータの更新を直接行わない、使わない。
+        _uiState.asStateFlow()//外部用。
+
+
+    private var loadMatchesJob: Job? = null
+    private var loadingCompetitionCode: String? = null
 
     init {//LaunchedEffectとの違い重要。こっちは変化ないものを使う。再コンポーズでは通信を1回で済ませられる。
         loadData()
     }
-
-    fun loadData() {//mainから通常関数を呼ぶ。（無駄なコードの減少）
-        viewModelScope.launch {//scope＝寿命が必要な理由は、無駄な更新の負担を無くすため。launchがコルーチンの状態を管理している。
+    fun loadData() {
+         viewModelScope.launch {//scope＝寿命が必要な理由は、無駄な更新の負担を無くすため。launchがコルーチンの状態を管理している。
             _uiState.value =
                 MainUiState.Loading//初期状態のため。
 
@@ -60,30 +66,45 @@ class MainViewModel @Inject constructor(//自分でリポジトリは書かな�
     fun loadMatches(
         competitionCode: String
     ) {
-        viewModelScope.launch {//Dispatcherを指定していない＝ViewmodelScopeの設定を引き継ぐ
+
+        if (
+            loadMatchesJob?.isActive == true &&
+            loadingCompetitionCode == competitionCode
+        ) {
+            return
+        }
+
+
+        loadMatchesJob?.cancel()
+
+        loadingCompetitionCode = competitionCode
+
+        loadMatchesJob =  viewModelScope.launch {//Dispatcherを指定していない＝ViewmodelScopeの設定を引き継ぐ
             val currentState = _uiState.value
 
-            if (currentState !is MainUiState.Success) {//Successと確定させるためらしい。
+            if (currentState !is MainUiState.Success) {
                 return@launch
             }
 
             val matches = repository.getMatches(
                 competitionCode
-            )//ここでmatchリスト取得(MatchRepository)
+            )//ここでmatchリスト取得
+
+
+            // 取得中に別リーグへ切り替わっていたら、
+            // 古い結果で画面を上書きしない
+            if (loadingCompetitionCode != competitionCode) {
+                return@launch
+            }
+
+
 
             _uiState.value = currentState.copy(//MainScreenのMainRouteがcollectする。
                 matches = matches
-            )//リーグ表示のuiを既存のままで、マッチ情報のみ更新する。重要！→ここでstate更新→MainRoute関数で監視してuiへ流す。
+            )
         }
     }
 }
 
 
 
-//uiState.value
-//= データ
-//= ただし型は MainUiState として見えている
-//
-//currentState
-//= 同じデータを受け取ったもの
-//= is Success の確認後は Success 型か？として見える

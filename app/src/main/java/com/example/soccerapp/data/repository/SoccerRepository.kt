@@ -17,6 +17,9 @@ interface SoccerRepository {
         matchId: Int
     ): Match?
 
+
+    suspend fun getCachedLeagues(): List<League>
+
 }
 
 

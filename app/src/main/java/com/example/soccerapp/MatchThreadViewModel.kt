@@ -12,11 +12,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 
 @HiltViewModel
 class MatchThreadViewModel @Inject constructor(
-    private val repository: CommentRepository
+    private val repository: CommentRepository,
+    private val savedStateHandle: SavedStateHandle//ViewModel消滅後の小さいUI状態復元に使える
 ) : ViewModel(){
+
+    private val matchId: Int =
+        checkNotNull(savedStateHandle["matchId"])
+
+    init {
+        loadComments()
+    }
+
 
 
     private val  _uiState = MutableStateFlow<MatchThreadUiState>(
@@ -26,16 +37,38 @@ class MatchThreadViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()//外部
 
 
-    fun loadComments(matchId: Int) {//コメ欄ゲット
+    fun loadComments() {//コメ欄ゲット
         viewModelScope.launch {
-            _uiState.value = MatchThreadUiState.Loading
+
+
+            val hasComments =
+                _uiState.value is MatchThreadUiState.Success
+
+            if (!hasComments) {
+                _uiState.value = MatchThreadUiState.Loading
+            }
+
 
             try {
                 val comments = repository.getComments(matchId)
 
-                _uiState.value = MatchThreadUiState.Success(
-                    comments = comments
-                )
+                val currentState =
+                    _uiState.value as? MatchThreadUiState.Success
+
+
+                _uiState.value =
+                    if (currentState != null) {
+                        currentState.copy(
+                            comments = comments//2回目の取得の際に既存コメントを更新して消さないため。(copy)手動だとほかの値が初期化。
+                        )
+
+                    } else {
+                        MatchThreadUiState.Success(
+                            comments = comments
+                        )
+                    }
+
+
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -61,6 +94,8 @@ class MatchThreadViewModel @Inject constructor(
         val currentState = _uiState.value as? MatchThreadUiState.Success
             ?: return
 
+
+
         _uiState.value = currentState.copy(text = newText)
     }
 
@@ -68,7 +103,6 @@ class MatchThreadViewModel @Inject constructor(
 
 
     fun postComment(//コメント投稿用
-        matchId: Int,
         author: String,
         text: String
     ) {

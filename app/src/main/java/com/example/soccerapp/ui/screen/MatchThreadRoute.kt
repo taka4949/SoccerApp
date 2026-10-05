@@ -1,5 +1,6 @@
 package com.example.soccerapp.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,9 +15,8 @@ import com.example.soccerapp.ui.state.MatchThreadUiState
 
 
 @Composable
-fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight使える（深堀？）
-    matchId: Int
-) {
+fun ColumnScope.MatchThreadRoute(){//親columnのスコープ→この中でweight使える
+
     val viewModel: MatchThreadViewModel = hiltViewModel()
 
 
@@ -28,12 +28,8 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
 
 
 
-    LaunchedEffect(matchId) {//initとの違い。こちらはComposable内で動く→変化するデータを扱う点でinitと違う。
-        viewModel.loadComments(matchId)//get関数
-    }
 
     CommentSection(
-        matchId = matchId,
         uiState = uiState,
         onRetry = viewModel::loadComments,
         modifier = Modifier.weight(1f)//columnの余分な部分を使える
@@ -49,7 +45,6 @@ fun ColumnScope.MatchThreadRoute(//親columnのスコープ→この中でweight
         isPosting = isPosting,
         onPostComment = { author, text ->
             viewModel.postComment(
-                matchId = matchId,
                 author = author,
                 text = text
             )
