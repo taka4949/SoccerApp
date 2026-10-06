@@ -24,17 +24,17 @@ class MatchThreadViewModel @Inject constructor(
     private val matchId: Int =
         checkNotNull(savedStateHandle["matchId"])
 
-    init {
-        loadComments()
-    }
-
-
 
     private val  _uiState = MutableStateFlow<MatchThreadUiState>(
         MatchThreadUiState.Loading
     )
-
     val uiState = _uiState.asStateFlow()//外部
+
+
+    init {
+        loadComments()
+    }
+
 
 
     fun loadComments() {//コメ欄ゲット

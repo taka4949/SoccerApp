@@ -1,5 +1,6 @@
 package com.example.soccerapp
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.soccerapp.data.model.Comment
 import com.example.soccerapp.data.repository.CommentRepository
 import com.example.soccerapp.ui.state.MatchThreadUiState
@@ -24,9 +25,15 @@ class MatchThreadViewModelTest {
 
         val repository = FakeCommentRepository()
 
-        val viewModel = MatchThreadViewModel(repository)//MatchThreadViewmodelはFakeを利用。
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
 
-        viewModel.loadComments(1)
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )//MatchThreadViewmodelはFakeを利用。
+
         advanceUntilIdle()//Coroutineの非同期処理をスキップ
 
         val state = viewModel.uiState.value as MatchThreadUiState.Success//StateFlowから現在値を取り出す
@@ -43,9 +50,16 @@ class MatchThreadViewModelTest {
     fun postComment_success() = runTest {
 
         val repository = FakeCommentRepository()
-        val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
+
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
         advanceUntilIdle()
 
 
@@ -59,7 +73,6 @@ class MatchThreadViewModelTest {
 
 
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )
@@ -81,43 +94,55 @@ class MatchThreadViewModelTest {
 
 
 
-@Test
-fun postComment_failure() = runTest {
-    val repository =
-        FakeCommentRepository(shouldFailPost = true)
+    @Test
+    fun postComment_failure() = runTest {
+        val repository =
+            FakeCommentRepository(shouldFailPost = true)
 
-    val viewModel = MatchThreadViewModel(repository)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
 
-    viewModel.loadComments(1)
-    advanceUntilIdle()
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
+        advanceUntilIdle()
 
 
-    viewModel.onAuthorChange("TABATA")
-    viewModel.onTextChange("Second")//投稿失敗時にコメント残るか？
+        viewModel.onAuthorChange("TABATA")
+        viewModel.onTextChange("Second")//投稿失敗時にコメント残るか？
 
-    viewModel.postComment(
-        matchId = 1,
-        author = "TABATA",
-        text = "Second"
-    )
-    advanceUntilIdle()
+        viewModel.postComment(
+            author = "TABATA",
+            text = "Second"
+        )
+        advanceUntilIdle()
 
-    val state =
-        viewModel.uiState.value as MatchThreadUiState.Success
+        val state =
+            viewModel.uiState.value as MatchThreadUiState.Success
 
-    assertEquals(1, state.comments.size)//Hello
-    assertEquals("Second", state.text)
-    assertEquals(false, state.isPosting)
-    assertEquals("Post failed", state.postErrorMessage)
-}
+        assertEquals(1, state.comments.size)//Hello
+        assertEquals("Second", state.text)
+        assertEquals(false, state.isPosting)
+        assertEquals("Post failed", state.postErrorMessage)
+    }
 
 
     @Test
     fun inputChange_updatesState() = runTest {
         val repository = FakeCommentRepository()
-        val viewModel = MatchThreadViewModel(repository)
 
-        viewModel.loadComments(1)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
+
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -137,9 +162,15 @@ fun postComment_failure() = runTest {
         val repository =
             FakeCommentRepository(shouldFailPost = true)
 
-        val viewModel = MatchThreadViewModel(repository)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
 
-        viewModel.loadComments(1)
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
@@ -147,7 +178,6 @@ fun postComment_failure() = runTest {
 
         // 1回目は失敗
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )
@@ -158,7 +188,6 @@ fun postComment_failure() = runTest {
 
         // 2回目は成功
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )
@@ -180,16 +209,21 @@ fun postComment_failure() = runTest {
         val repository =
             FakeCommentRepository(shouldSuspendPost = true)
 
-        val viewModel = MatchThreadViewModel(repository)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
 
-        viewModel.loadComments(1)
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
         advanceUntilIdle()
 
         viewModel.onAuthorChange("TABATA")
         viewModel.onTextChange("Second")
 
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )
@@ -213,22 +247,27 @@ fun postComment_failure() = runTest {
 
 
 
+
     @Test
     fun postComment_whilePosting_doesNotPostTwice() = runTest {
         val repository =
             FakeCommentRepository(shouldSuspendPost = true)
 
-        val viewModel = MatchThreadViewModel(repository)
+        val savedStateHandle = SavedStateHandle(
+            mapOf("matchId" to 1)
+        )
 
-        viewModel.loadComments(1)
+        val viewModel = MatchThreadViewModel(
+            repository,
+            savedStateHandle
+        )
+
+
         advanceUntilIdle()
 
-        viewModel.onAuthorChange("TABATA")
-        viewModel.onTextChange("Second")
 
         // 1回目
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )
@@ -238,7 +277,6 @@ fun postComment_failure() = runTest {
         // まだ1回目は await() で止まっている
         // その間に2回目
         viewModel.postComment(
-            matchId = 1,
             author = "TABATA",
             text = "Second"
         )

@@ -4,29 +4,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
-
-
-//既存のIDがあれば使う。null なら新しいスレッドを作り、そのIDを使う、という変更ではある。9/22
 class JdbcCommentRepository : CommentRepository {
 
-    override suspend fun create(//保存用。この試合にコメントからKtorへ→matchID→結びついているthreadID検索→それを付帯したコメントをテーブルに保存。
+
+//スレッド管理はKtor側
+    //ResultSetは、0行目参照。result.next()で1行目参照。
+
+
+
+    override suspend fun create(//コメント1件保存用
         matchId: Int,
         request: CreateCommentRequest,
-    ): Comment = withContext(Dispatchers.IO) {//sqlを送ってから待ち時間が発生する。待機時間が発生する処理向けの処理スレッド
-        DatabaseFactory.getConnection().use { connection ->
-            connection.autoCommit = false // NEW
+    ): Comment = withContext(Dispatchers.IO) {//sqlを送ってから待ち時間が発生→待機時間が発生する処理向けの処理スレッド
+
+
+        DatabaseFactory.getConnection().use { connection ->//useは、｛｝終了後、connection.close()
+            connection.autoCommit = false//処理を一元化→どこか失敗したら失敗扱い
             try {
 
-                connection.prepareStatement(
+                connection.prepareStatement(//ポスグレに送る準備。↓このSQL意味は同スレッドの並列処理×
                     "SELECT pg_advisory_xact_lock(?)"
                 ).use { statement ->
-                    statement.setLong(1, matchId.toLong())
-                    statement.executeQuery().use { result -> result.next() }
+                    statement.setLong(1, matchId.toLong())//SQL内の1番目の？→matchId
+                    statement.executeQuery().use { result -> result.next() }//ポスグレへ送る
                 }
 
 
-                // NEW: the lookup may return null
-                val existingThreadId = connection.prepareStatement(//threadID取得。androidはこれを知らない。スレッド管理はKtor側。
+                val existingThreadId = connection.prepareStatement(//threadID取得。
                     """
                 SELECT id
                 FROM threads
@@ -34,17 +38,17 @@ class JdbcCommentRepository : CommentRepository {
                   AND status = 'OPEN'
                 ORDER BY number DESC
                 LIMIT 1
-                """.trimIndent()//DESC＝大きい順→最新のスレッドを取得したいから。つまりはコメント数多いもの
+                """.trimIndent()//DESC＝大きい順→最新のスレッドを取得。
                 ).use { statement ->
-                    statement.setLong(1, matchId.toLong())//上のSQLへセットする！
-
-                    statement.executeQuery().use { result ->//PostgreSQLへ送る実行、resultは返り値
-                        if (result.next()) result.getLong("id") else null
+                    statement.setLong(1, matchId.toLong())//?=matchId
+                    statement.executeQuery().use { result ->//resultがSQLの結果
+                        if (result.next()) result.getLong("id") else null//取得→existingThreadIdへ。
                     }
                 }
 
-                // NEW START
-                val threadId = existingThreadId ?: connection.prepareStatement(
+
+
+                val threadId = existingThreadId ?: connection.prepareStatement(//既存のスレッドID利用orなければ新しいスレッドID作成↓
                     """
                 INSERT INTO threads (match_id, number)
                 SELECT ?, COALESCE(MAX(number), 0) + 1
@@ -63,7 +67,7 @@ class JdbcCommentRepository : CommentRepository {
 
 
 
-                val comment = connection.prepareStatement(//コメントの保存
+                val comment = connection.prepareStatement(//ここでコメントテーブルにコメント追加+コメント取得Comment()
                     """
                 INSERT INTO comments (
                     thread_id,
@@ -72,9 +76,9 @@ class JdbcCommentRepository : CommentRepository {
                 )
                 VALUES (?, ?, ?)
                 RETURNING id, created_at
-                """.trimIndent()//ここでコメントテーブルにコメント追加。VALUESは指定した列へ入れる。RETURNINGはkotlin側へその値を返す。
+                """.trimIndent()
                 ).use { statement ->
-                    statement.setLong(1, threadId)//VALUESの1つ目の内容、以下2～3つ目。
+                    statement.setLong(1, threadId)
                     statement.setString(2, request.author)
                     statement.setString(3, request.text)
 
@@ -97,11 +101,13 @@ class JdbcCommentRepository : CommentRepository {
                 }
 
                 connection.commit()
-                comment
+                comment//return
+
+
             } catch (e: Exception) {
 
                 try {
-                    connection.rollback()
+                    connection.rollback()//途中まで行ったDB変更を取り消す
                 } catch (rollbackError: Exception) {
                     e.addSuppressed(rollbackError)
                 }
@@ -114,11 +120,14 @@ class JdbcCommentRepository : CommentRepository {
 
 
 
-    override suspend fun getByMatchId(//コメント一覧を返す。
+
+
+
+    override suspend fun getByMatchId(//コメント一覧を返す用。
         matchId: Int,
     ): List<Comment> = withContext(Dispatchers.IO) {
         DatabaseFactory.getConnection().use { connection ->
-            connection.prepareStatement(//c=comments.t=threads。ここだけは後に理解。
+            connection.prepareStatement(//INNER JOINはコメントテーブルにthreadsテーブルの情報も紐づける。onは同じ行同士を結ぶ
                 """
 SELECT
     c.id,
@@ -138,17 +147,17 @@ WHERE t.id = (
     LIMIT 1
 )
 ORDER BY c.created_at, c.id
-""".trimIndent()
+""".trimIndent()//↑これでコメント欄を整理（時刻が古い順、id小さい順など）
             ).use { statement ->
                 statement.setLong(1, matchId.toLong())
 
                 try {
                     statement.executeQuery().use { result ->
                         buildList {
-                            while (result.next()) {
+                            while (result.next()) {//コメント存在する限りリストに追加。
                                 add(
                                     Comment(
-                                        id = result.getLong("id"),
+                                        id = result.getLong("id"),//c.id
                                         matchId = result.getInt("match_id"),
                                         author = result.getString("author"),
                                         text = result.getString("content"),
@@ -162,10 +171,11 @@ ORDER BY c.created_at, c.id
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.printStackTrace()//例外の詳細をサーバーのログへ
                     throw e
                 }
             }
         }
     }
 }
+

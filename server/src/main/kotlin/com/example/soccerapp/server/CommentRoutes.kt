@@ -15,8 +15,8 @@ fun Route.commentRoutes(
     commentRepository: CommentRepository,
 ) {
     route("/matches/{matchId}/comments") {
-        get {//掲示板を開くときに動く用の関数
-            val matchId = call.parameters["matchId"]?.toIntOrNull()//callが引数の役割を果たす。application.ktからurlとつながったcallがくる。
+        get {//コメント欄返す用
+            val matchId = call.parameters["matchId"]?.toIntOrNull()
 
 
             if (matchId == null) {
@@ -27,17 +27,17 @@ fun Route.commentRoutes(
                 return@get
             }
 
-            println("GET comments: matchId=$matchId")
 
             try {
-                val comments = commentRepository.getByMatchId(matchId)
+                val comments = commentRepository.getByMatchId(matchId)//コメント欄返ってくる
 
-                println("GET comments success: ${comments.size}")
 
-                call.respond(
+                call.respond(//Retrofitへ
                     HttpStatusCode.OK,
                     comments
                 )
+
+
             } catch (e: Exception) {
                 println("GET comments failed: ${e::class.qualifiedName}: ${e.message}")
                 throw e
@@ -48,7 +48,7 @@ fun Route.commentRoutes(
 
 
 
-        post {//コメント投稿→保存→ui表示をする際に、動く用の関数。
+        post {//コメント投稿の1件返す用
             val matchId = call.parameters["matchId"]?.toIntOrNull()
 
             if (matchId == null) {
@@ -59,8 +59,10 @@ fun Route.commentRoutes(
                 return@post
             }
 
-            val request = try {//author,textがここで揃う。
-                call.receive<CreateCommentRequest>()
+            val request = try {
+                call.receive<CreateCommentRequest>()//author,text取得。
+
+
             } catch (e: ContentTransformationException) {//無駄なデータ、不足データがある場合
                 call.respond(
                     HttpStatusCode.BadRequest,
@@ -85,18 +87,19 @@ fun Route.commentRoutes(
                 return@post
             }
 
-            val comment = commentRepository.create(matchId, request)//ここでコメントを保存,  authorなどが一体＝commentになる。
+            val comment = commentRepository.create(matchId, request)//ここでコメントを保存。Comment()返ってくる。
 
-            call.respond(
+
+
+            call.respond(//Retrofitへ
                 HttpStatusCode.Created,
                 comment
-            )//ここでgetをする場合、get内のfilterによる設計の影響で、計算量が増える。
+            )
         }
     }
 }
 
-//例:callがもつもの。
-//├─ URL：/matches/123/comments
-//├─ HTTPメソッド：POST
-//├─ ヘッダー：Content-Typeなど
-//└─ 本文：{"author":"Sakata","text":"Good match"}
+
+
+
+

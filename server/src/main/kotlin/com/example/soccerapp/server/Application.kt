@@ -31,14 +31,14 @@ fun main() {
 }
 
 fun Application.module(
-    commentRepository: CommentRepository = CommentStore(),
+    commentRepository: CommentRepository = CommentStoreTest(),//テストではStore()利用
 ) {
-    install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定。大事。
+    install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定
         json()
     }
 
 
-    routing {//URLごとの処理を登録するktor関数
+    routing {//通信完了→OKと送る。返信用
         get("/health") {
             call.respondText(
                 text = """{"status":"ok"}""",
@@ -47,7 +47,9 @@ fun Application.module(
             )
         }
 
-        commentRoutes(commentRepository)
+
+
+        commentRoutes(commentRepository)//本番
     }
 
 }

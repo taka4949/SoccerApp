@@ -2,7 +2,7 @@ package com.example.soccerapp.server
 
 import java.time.Instant
 
-class CommentStore : CommentRepository {//投稿された時に動く。保存して、コメントをuiへ表示するためにリターンしている。
+class CommentStoreTest : CommentRepository {//テスト用
     private val comments = mutableListOf<Comment>()
     private var nextId = 1L
 
@@ -18,7 +18,7 @@ class CommentStore : CommentRepository {//投稿された時に動く。保存�
             createdAt = Instant.now().toString(),
         )
 
-        comments.add(comment)//一応ここで保存している。(postgreSQLはまだ存在しない）。
+        comments.add(comment)//一応ここで保存している。
         nextId += 1
 
         return comment
@@ -30,4 +30,4 @@ class CommentStore : CommentRepository {//投稿された時に動く。保存�
         }
     }
 }
-//テスト時に利用する。jdbcCommentRepositoryが本番用。
+//jdbcCommentRepositoryが本番用。

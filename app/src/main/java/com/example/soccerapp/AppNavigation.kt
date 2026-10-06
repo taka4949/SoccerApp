@@ -9,6 +9,8 @@ import com.example.soccerapp.data.model.Match
 import com.example.soccerapp.ui.LeagueListScreen
 import com.example.soccerapp.ui.MatchThreadScreen
 import androidx.compose.material3.Text
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.example.soccerapp.ui.MatchListScreen
 import com.example.soccerapp.ui.screen.MatchDetailRoute
 
@@ -17,9 +19,7 @@ fun AppNavigation(
     leagues: List<League>,
     matches: List<Match>,
     onLeagueSelected: (String) -> Unit//この関数と引数で返り値は無し、というセットを下に渡す。
-)
-
-{
+) {
     val navController = rememberNavController()//naviはスタック、変遷の履歴を記録する。戻ることが可能へ
 
 
@@ -59,19 +59,24 @@ fun AppNavigation(
 
 
 
+        composable(
+            route = "match/{matchId}",
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
 
-        composable(route = "match/{matchId}") { backStackEntry ->
             val matchId = requireNotNull(
-                backStackEntry.arguments?.getString("matchId")
-            ).toInt()//バックスタックからmatchIDを取得している。
-
+                backStackEntry.arguments?.getInt("matchId")
+            )
 
             MatchDetailRoute(
                 matchId = matchId
             )
-
-
         }
+
     }
 }
 

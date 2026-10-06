@@ -16,7 +16,7 @@ import javax.inject.Singleton
 abstract class RepositoryModule {//Hiltがこの宣言を読み、必要なコードを生成
 
     @Binds//引数の実装クラスを、戻り値のinterfaceとして結び付ける
-    @Singleton//Repositoryをアプリのプロセス内で1個だけ作り、同じものを再利用可能にしている
+    @Singleton
 
     abstract fun bindSoccerRepository(
         implementation: MatchRepository//これが中身。インターフェースは空のルール。
@@ -28,7 +28,7 @@ abstract class RepositoryModule {//Hiltがこの宣言を読み、必要なコ�
 
 //Moduleが必要な理由
 //
-//Hiltがそのままでは作れない場合です。
+//Hiltがそのままでは作れない場合
 //
 //interface
 //→ どの実装を使うか分からない

@@ -23,7 +23,7 @@ object CommentNetworkModule {
     @Singleton
     @CommentNetwork
     fun commentProvideOkHttpClient(): OkHttpClient{
-        return OkHttpClient.Builder()//これは.Builder()という型になるから、.build()で型を正す。
+        return OkHttpClient.Builder()//OkHttpClientを生成する
             .build()
     }
 
@@ -37,7 +37,7 @@ object CommentNetworkModule {
             ignoreUnknownKeys = true
         }
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")
+            .baseUrl("http://10.0.2.2:8080/")//ローカルホスト（Ktorがここで動いている）
             .client(okHttpClient)
             .addConverterFactory(
                 json.asConverterFactory(
@@ -57,3 +57,22 @@ object CommentNetworkModule {
         )
     }
 }
+
+
+//イメージ→(CommentApiService::class.java)
+//class GeneratedCommentApiService : CommentApiService {
+//
+//    override suspend fun getComments(
+//        matchId: Int
+//    ): List<CommentDto> {
+//
+//        // @GETを見る
+//        // @Pathを見る
+//        // HTTPリクエストを作る
+//        // OkHttpで送る
+//        // JSONを受け取る
+//        // List<CommentDto>へ変換する
+//
+//        return ...
+//}
+//}

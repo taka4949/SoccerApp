@@ -56,7 +56,7 @@ object NetworkModule {
                 )
             )
             .build()//ここで道具すべてが完成する。
-    }//ここで2週目～に帰ってきたデータをsoccerApiServiceのgetCompetitions()に送られる。
+    }
 
 
     @Provides
@@ -65,11 +65,16 @@ object NetworkModule {
         @FootballNetwork retrofit: Retrofit
     ): SoccerApiService {
         return retrofit.create(
-            SoccerApiService::class.java//ここで、RetrofitとSoccerApiServiceのものが合体する、すべてが完成して、返す。
+            SoccerApiService::class.java
         )//SoccerApiServiceという型を返す。create()。ここでこの返り値の理由はhiltで追うため。
         //ここは1週目のhiltの準備だけしか通らない。大事→base url + competitionsでget通信する、きっかけをつくる。
     }
 }
+
+
+
+
+
 //Retrofitのイメージ→class GeneratedSoccerApiService : SoccerApiService {
 //
 //    override suspend fun getCompetitions(): CompetitionResponseDto {
@@ -82,6 +87,6 @@ object NetworkModule {
 //        // ↓
 //        // ConverterでDTOへ変換
 //
-//        return convertedDto（ここで、matchrepositoryのもとへいく）
+//        return convertedDto（ここで、MatchRepositoryのもとへいく）
 //    }
 //}
