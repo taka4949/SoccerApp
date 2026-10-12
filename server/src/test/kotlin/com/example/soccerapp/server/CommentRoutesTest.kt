@@ -39,6 +39,9 @@ class CommentRoutesTest {
         assertEquals(HttpStatusCode.Created, response.status)
     }
 
+
+
+
     @Test
     fun getCommentsReturnsPostedComment() = testApplication {
         application {
@@ -71,6 +74,10 @@ class CommentRoutesTest {
     }
 
 
+
+
+
+
     //不正matchIDを検知
     @Test
     fun postCommentWithInvalidMatchIdReturnsBadRequest() = testApplication {
@@ -92,6 +99,8 @@ class CommentRoutesTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
     }
+
+
 
 
     @Test

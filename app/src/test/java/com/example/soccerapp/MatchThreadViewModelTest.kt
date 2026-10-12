@@ -288,7 +288,36 @@ class MatchThreadViewModelTest {
         repository.allowPostToComplete.complete(Unit)
         advanceUntilIdle()
     }
+
+
+@Test
+fun postComment_threadChanged_replacesComments() = runTest {
+    val repository = FakeCommentRepository()
+
+    val viewModel = MatchThreadViewModel(
+        repository,
+        SavedStateHandle(mapOf("matchId" to 1))
+    )//init
+
+    advanceUntilIdle()
+
+
+    repository.switchThread = true
+
+
+    viewModel.postComment("TABATA", "Second")
+    advanceUntilIdle()
+
+    val state =
+        viewModel.uiState.value as MatchThreadUiState.Success
+
+    assertEquals(1, state.comments.size)
+    assertEquals(11L, state.comments[0].threadId)
+    assertEquals("Second", state.comments[0].text)
+    assertEquals(2, repository.getCommentsCallCount)//getComments関数が2回かどうか
 }
+}
+
 
 
 
@@ -302,15 +331,32 @@ private class FakeCommentRepository(
 
     var createCommentCallCount = 0
 
+    var switchThread = false
+    var getCommentsCallCount = 0
+
+    private var switchedComment: Comment? = null
+
     override suspend fun getComments(
         matchId: Int
     ): List<Comment> {
+
+        getCommentsCallCount++
+
+
+        val comment = switchedComment
+        if (comment != null) {
+            return listOf(comment)
+        }
+
+
+
         return listOf(
             Comment(
                 id = 1L,
                 matchId = matchId,
                 author = "TABATA",
                 text = "Hello",
+                threadId = if (switchThread) 11L else 10L,
                 createdAt = "2026-10-03"
             )
         )
@@ -333,15 +379,21 @@ private class FakeCommentRepository(
             allowPostToComplete.await()
         }
 
-        return Comment(
+        val comment = Comment(
             id = 2L,
             matchId = matchId,
+            threadId = if (switchThread) 11L else 10L,
             author = author,
             text = text,
             createdAt = "2026-10-03"
         )
+
+
+        if (switchThread) {
+            switchedComment = comment
+        }
+
+        return comment
+
     }
-
-
-
 }

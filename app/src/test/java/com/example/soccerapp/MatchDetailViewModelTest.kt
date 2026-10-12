@@ -112,6 +112,7 @@ class MatchDetailViewModelTest {
 
 
 
+
             if (shouldFail) {
                 throw Exception("Load failed")
             }
@@ -135,5 +136,11 @@ class MatchDetailViewModelTest {
                 awayTeamCrest = null
             )
         }
+
+
+        override suspend fun getCachedLeagues(): List<League> {
+            return emptyList()
+        }
     }
+
 }

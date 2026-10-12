@@ -4,8 +4,9 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 object DatabaseFactory {//postgreSQLへ接続するために必要なものを作るファイル
-    private const val URL =
-        "jdbc:postgresql://localhost:5432/soccer_app"
+private val URL =
+    System.getenv("SOCCER_DB_URL")
+        ?: "jdbc:postgresql://localhost:5432/soccer_app"
 
     private const val USER =
         "soccer_app_user"
@@ -27,11 +28,11 @@ object DatabaseFactory {//postgreSQLへ接続するために必要なものを�
 
     fun verifyConnection() {//ポスグレを接続できるか確認用
         getConnection().use { connection ->
-            connection.prepareStatement("SELECT 1").use { statement ->
+            connection.prepareStatement("SELECT current_database()").use { statement ->
                 statement.executeQuery().use { result ->
                     result.next()
                     println(
-                        "PostgreSQL connection verified: ${result.getInt(1)}"
+                        "Connected database: ${result.getString(1)}"
                     )
                 }
             }

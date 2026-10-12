@@ -71,7 +71,7 @@ class MainViewModel @Inject constructor(
             loadMatchesJob?.isActive == true &&
             loadingCompetitionCode == competitionCode
         ) {
-            return
+            return//同じリーグタップならその処理終了。
         }
 
 
@@ -91,7 +91,7 @@ class MainViewModel @Inject constructor(
             )//ここでmatchリスト取得
 
 
-            // 取得中に別リーグへ切り替わっていたら、
+            // 取得中に別リーグへ切り替わっていたら、処理終了。
             // 古い結果で画面を上書きしない
             if (loadingCompetitionCode != competitionCode) {
                 return@launch

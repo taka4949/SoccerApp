@@ -28,6 +28,7 @@ class NetworkCommentRepository @Inject constructor(
             id = commentDto.id,
             matchId = commentDto.matchId,
             author = commentDto.author,
+            threadId = commentDto.threadId,
             text = commentDto.text,
             createdAt = commentDto.createdAt,
         )
@@ -42,6 +43,7 @@ class NetworkCommentRepository @Inject constructor(
             Comment(
                 id = commentDto.id,
                 matchId = commentDto.matchId,
+                threadId = commentDto.threadId,
                 author = commentDto.author,
                 text = commentDto.text,
                 createdAt = commentDto.createdAt,

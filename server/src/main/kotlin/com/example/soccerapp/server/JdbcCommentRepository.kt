@@ -20,7 +20,7 @@ class JdbcCommentRepository : CommentRepository {
 
         DatabaseFactory.getConnection().use { connection ->//useは、｛｝終了後、connection.close()
             connection.autoCommit = false//処理を一元化→どこか失敗したら失敗扱い
-            try {
+            try {//失敗したらロールバック
 
                 connection.prepareStatement(//ポスグレに送る準備。↓このSQL意味は同スレッドの並列処理×
                     "SELECT pg_advisory_xact_lock(?)"
@@ -46,24 +46,68 @@ class JdbcCommentRepository : CommentRepository {
                     }
                 }
 
+                val commentCount = if (existingThreadId == null) {//コメント件数取得
+                    0L
+                } else {
+                    connection.prepareStatement(
+                        """
+        SELECT COUNT(*) AS comment_count
+        FROM comments
+        WHERE thread_id = ?
+        """.trimIndent()
+                    ).use { statement ->
+                        statement.setLong(1, existingThreadId)
+
+                        statement.executeQuery().use { result ->
+                            result.next()
+                            result.getLong("comment_count")
+                        }//SELECTはRETURNING必要ない。
+                    }
+
+                }
 
 
-                val threadId = existingThreadId ?: connection.prepareStatement(//既存のスレッドID利用orなければ新しいスレッドID作成↓
-                    """
-                INSERT INTO threads (match_id, number)
-                SELECT ?, COALESCE(MAX(number), 0) + 1
-                FROM threads
-                WHERE match_id = ?
-                RETURNING id
-                """.trimIndent()
-                ).use { statement ->
-                    statement.setLong(1, matchId.toLong())
-                    statement.setLong(2, matchId.toLong())
-                    statement.executeQuery().use { result ->
-                        check(result.next()) { "Created thread was not returned" }
-                        result.getLong("id")
+                if (existingThreadId != null && commentCount >= 1000L) {
+                    connection.prepareStatement(
+                        "UPDATE threads SET status = 'CLOSED' WHERE id = ?"
+                    ).use { statement ->
+                        statement.setLong(1, existingThreadId)
+                        statement.executeUpdate()
                     }
                 }
+
+                //コメント0件or1000件以上ならスレッド新規作成
+                val shouldCreateNewThread =
+                    existingThreadId == null || commentCount >= 1000L
+
+
+
+
+
+                //新しいスレッドID作成or既存ID利用
+                val threadId = if (shouldCreateNewThread) {
+                    connection.prepareStatement(
+                        """
+        INSERT INTO threads (match_id, number)
+        SELECT ?, COALESCE(MAX(number), 0) + 1
+        FROM threads
+        WHERE match_id = ?
+        RETURNING id
+        """.trimIndent()
+                    ).use { statement ->
+                        statement.setLong(1, matchId.toLong())
+                        statement.setLong(2, matchId.toLong())
+
+                        statement.executeQuery().use { result ->
+                            check(result.next())
+                            result.getLong("id")
+                        }
+                    }
+                } else {
+                    checkNotNull(existingThreadId)
+                }
+
+
 
 
 
@@ -90,6 +134,7 @@ class JdbcCommentRepository : CommentRepository {
                         Comment(//android側に返すために、kotlinデータへ変換する。
                             id = result.getLong("id"),
                             matchId = matchId,
+                            threadId = threadId,
                             author = request.author,
                             text = request.text,
                             createdAt = result
@@ -123,6 +168,10 @@ class JdbcCommentRepository : CommentRepository {
 
 
 
+
+
+
+
     override suspend fun getByMatchId(//コメント一覧を返す用。
         matchId: Int,
     ): List<Comment> = withContext(Dispatchers.IO) {
@@ -131,6 +180,7 @@ class JdbcCommentRepository : CommentRepository {
                 """
 SELECT
     c.id,
+    c.thread_id,
     t.match_id,
     c.author,
     c.content,
@@ -158,6 +208,7 @@ ORDER BY c.created_at, c.id
                                 add(
                                     Comment(
                                         id = result.getLong("id"),//c.id
+                                        threadId = result.getLong("thread_id"),
                                         matchId = result.getInt("match_id"),
                                         author = result.getString("author"),
                                         text = result.getString("content"),

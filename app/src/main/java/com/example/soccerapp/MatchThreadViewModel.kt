@@ -52,6 +52,7 @@ class MatchThreadViewModel @Inject constructor(
             try {
                 val comments = repository.getComments(matchId)
 
+
                 val currentState =
                     _uiState.value as? MatchThreadUiState.Success
 
@@ -59,7 +60,8 @@ class MatchThreadViewModel @Inject constructor(
                 _uiState.value =
                     if (currentState != null) {
                         currentState.copy(
-                            comments = comments//2回目の取得の際に既存コメントを更新して消さないため。(copy)手動だとほかの値が初期化。
+                            comments = comments,
+                            refreshErrorMessage = null
                         )
 
                     } else {
@@ -72,10 +74,21 @@ class MatchThreadViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = MatchThreadUiState.Error(
-                    message = e.message ?: "Failed to load comments"
-                )
+                val currentState =
+                    _uiState.value as? MatchThreadUiState.Success
+
+                _uiState.value =
+                    if (currentState != null) {
+                        currentState.copy(
+                            refreshErrorMessage = "Failed to refresh comments"
+                        )
+                    } else {
+                        MatchThreadUiState.Error(
+                            message = e.message ?: "Failed to load comments"
+                        )
+                    }
             }
+
         }
     }
 
@@ -112,6 +125,10 @@ class MatchThreadViewModel @Inject constructor(
                     ?: return@launch
 
 
+            val displayedThreadId =
+                currentState.comments.firstOrNull()?.threadId//いま表示されているスレッドID
+
+
             if (currentState.isPosting) {
                 return@launch
             }
@@ -129,13 +146,48 @@ class MatchThreadViewModel @Inject constructor(
                     text = text
                 )
 
-                _uiState.value = currentState.copy(//既存コメ欄表示するためにcopy必須
-                    comments = currentState.comments + comment,
+
+                var refreshFailed = false
+
+
+                val nextComments =
+                    if (
+                        displayedThreadId != null &&
+                        displayedThreadId != comment.threadId
+                    ) {
+                        try {
+                            repository.getComments(matchId)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            refreshFailed = true
+                            currentState.comments
+                        }
+                    } else {
+                        currentState.comments + comment//何も問題ない場合、そのまま表示
+                    }
+
+
+
+
+
+                _uiState.value = currentState.copy(
+                    comments = nextComments,
                     author = author,
                     text = "",
-                    isPosting = false,//サーバー通信成功。false→このファイル内でisPostingの状態を管理
-                    postErrorMessage = null
+                    isPosting = false,
+                    postErrorMessage = null,
+                    refreshErrorMessage =
+                        if (refreshFailed) {//GET失敗時
+                            "Failed to refresh comments"
+                        } else {
+                            null
+                        }
                 )
+
+
+
+
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -148,7 +200,6 @@ class MatchThreadViewModel @Inject constructor(
     }
 
 }
-
 
 //isPostingは、このファイル内で完結させる。ポスト中にtrue、ポスト成功時にfalse→二重投稿防止
 //copyにより、既存uiを表示したまま新たなuiを表示できる。

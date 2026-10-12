@@ -38,8 +38,6 @@ abstract class RepositoryModule {//Hiltがこの宣言を読み、必要なコ�
 //→ @Inject constructorを書けない
 //→ @Providesを置くModuleが必要
 //
-//今回の整理です。
-//
 //MatchThreadViewModel
 //→ @HiltViewModel + @Inject
 //→ Module不要

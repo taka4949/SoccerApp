@@ -6,4 +6,5 @@ data class Comment(
     val author: String,
     val text: String,
     val createdAt: String,
+    val threadId: Long,
 )

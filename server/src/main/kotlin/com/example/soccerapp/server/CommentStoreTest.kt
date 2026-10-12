@@ -12,6 +12,7 @@ class CommentStoreTest : CommentRepository {//テスト用
     ): Comment {
         val comment = Comment(
             id = nextId,
+            threadId = 1L,
             matchId = matchId,
             author = request.author,
             text = request.text,
