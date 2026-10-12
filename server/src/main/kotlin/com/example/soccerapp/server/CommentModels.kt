@@ -18,3 +18,8 @@ data class Comment(//androidへ返すデータ
     val threadId: Long,
 )
 
+@Serializable
+data class ArchivedThreadDto(
+    val threadId: Long,
+    val number: Int
+)

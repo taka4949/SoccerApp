@@ -64,6 +64,11 @@ class JdbcCommentRepositoryIntegrationTest {
             CreateCommentRequest("test", "comment-1000")
         )
 
+        val before = repository.getArchivedThreads(matchId)
+        assertEquals(0, before.size)
+
+
+
         //1001件目を投稿
         val comment1001 = repository.create(
             matchId,
@@ -74,6 +79,12 @@ class JdbcCommentRepositoryIntegrationTest {
         assertEquals(oldThreadId, comment1000.threadId)
         assertNotEquals(oldThreadId, comment1001.threadId)//違うIDになる
 
+
+        val archived = repository.getArchivedThreads(matchId)
+
+        assertEquals(1, archived.size)
+        assertEquals(oldThreadId, archived[0].threadId)
+        assertEquals(1, archived[0].number)
 
 
         //PostgreSQL状態を確認

@@ -30,5 +30,24 @@ class CommentStoreTest : CommentRepository {//テスト用
             comment.matchId == matchId
         }
     }
+
+
+
+    override suspend fun getArchivedThreads(
+        matchId: Int
+    ): List<ArchivedThreadDto> = emptyList()
+
+
+
+
+    override suspend fun getArchivedComments(
+        matchId: Int,
+        threadId: Long
+    ): List<Comment> {
+        return comments.filter { comment ->
+            comment.matchId == matchId &&
+                    comment.threadId == threadId
+        }
+    }
 }
 //jdbcCommentRepositoryが本番用。

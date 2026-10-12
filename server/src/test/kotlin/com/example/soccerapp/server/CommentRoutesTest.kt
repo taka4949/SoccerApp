@@ -232,4 +232,182 @@ class CommentRoutesTest {
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
     }
+
+
+
+
+
+
+
+    @Test
+    fun getArchivedThreadsReturnsEmptyList() = testApplication {
+        application {
+            module()
+        }
+
+        val response = client.get("/matches/123/threads")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("[]", response.bodyAsText())
+    }
+
+
+
+    @Test
+    fun getArchivedThreadsReturnsList() = testApplication {
+        val repository = object : CommentRepository by CommentStoreTest() {
+
+            override suspend fun getArchivedThreads(
+                matchId: Int
+            ): List<ArchivedThreadDto> {
+                assertEquals(123, matchId)
+
+                return listOf(
+                    ArchivedThreadDto(threadId = 11L, number = 2),
+                    ArchivedThreadDto(threadId = 10L, number = 1)
+                )
+            }
+        }
+
+        application {
+            module(repository)
+        }
+
+        val response = client.get("/matches/123/threads")
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val threads = Json.decodeFromString<List<ArchivedThreadDto>>(
+            response.bodyAsText()
+        )
+
+        assertEquals(2, threads.size)
+        assertEquals(11L, threads[0].threadId)
+        assertEquals(2, threads[0].number)
+        assertEquals(10L, threads[1].threadId)
+        assertEquals(1, threads[1].number)
+    }
+
+
+
+
+    @Test
+    fun getArchivedThreadsWithInvalidMatchIdReturnsBadRequest() =
+        testApplication {
+            application {
+                module()
+            }
+
+            val response = client.get("/matches/abc/threads")
+
+            assertEquals(HttpStatusCode.BadRequest, response.status)
+        }
+
+
+
+
+    @Test
+    fun getArchivedCommentsReturnsSelectedThreadComments() = testApplication {
+
+        val repository = object : CommentRepository by CommentStoreTest() {
+
+
+
+            override suspend fun getArchivedComments(
+                matchId: Int,
+                threadId: Long
+            ): List<Comment> {
+
+                assertEquals(123, matchId)
+                assertEquals(15L, threadId)
+
+                return listOf(
+                    Comment(
+                        id = 101L,
+                        matchId = 123,
+                        threadId = 15L,
+                        author = "Taro",
+                        text = "First archived comment",
+                        createdAt = "2026-10-01T10:00:00Z"
+                    ),
+                    Comment(
+                        id = 102L,
+                        matchId = 123,
+                        threadId = 15L,
+                        author = "Hanako",
+                        text = "Second archived comment",
+                        createdAt = "2026-10-01T10:01:00Z"
+                    )
+                )
+            }
+        }
+
+        application {
+            module(repository)
+        }
+
+        val response = client.get(
+            "/matches/123/threads/15/comments"
+        )
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        val comments = Json.decodeFromString<List<Comment>>(
+            response.bodyAsText()
+        )
+
+        assertEquals(2, comments.size)
+
+        assertEquals(101L, comments[0].id)
+        assertEquals(15L, comments[0].threadId)
+        assertEquals("Taro", comments[0].author)
+        assertEquals("First archived comment", comments[0].text)
+
+        assertEquals(102L, comments[1].id)
+        assertEquals(15L, comments[1].threadId)
+        assertEquals("Hanako", comments[1].author)
+        assertEquals("Second archived comment", comments[1].text)
+    }
+
+
+
+    @Test
+    fun getArchivedCommentsReturnsEmptyList() = testApplication {
+        application {
+            module()
+        }
+
+        val response = client.get(
+            "/matches/123/threads/15/comments"
+        )
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals("[]", response.bodyAsText())
+    }
+
+    @Test
+    fun getArchivedCommentsWithInvalidMatchIdReturnsBadRequest() = testApplication {
+        application {
+            module()
+        }
+
+        val response = client.get(
+            "/matches/abc/threads/15/comments"
+        )
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun getArchivedCommentsWithInvalidThreadIdReturnsBadRequest() = testApplication {
+        application {
+            module()
+        }
+
+        val response = client.get(
+            "/matches/123/threads/abc/comments"
+        )
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
 }

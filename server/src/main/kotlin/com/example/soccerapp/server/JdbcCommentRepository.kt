@@ -228,5 +228,89 @@ ORDER BY c.created_at, c.id
             }
         }
     }
+
+    override suspend fun getArchivedThreads(//スレッド一覧取得
+        matchId: Int
+    ): List<ArchivedThreadDto> = withContext(Dispatchers.IO) {
+        DatabaseFactory.getConnection().use { connection ->
+            connection.prepareStatement(
+                """
+            SELECT id, number
+            FROM threads
+            WHERE match_id = ?
+              AND status = 'CLOSED'
+            ORDER BY number DESC
+            """.trimIndent()
+            ).use { statement ->
+                statement.setInt(1, matchId)
+
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) {
+                            add(
+                                ArchivedThreadDto(
+                                    threadId = result.getLong("id"),
+                                    number = result.getInt("number")
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    override suspend fun getArchivedComments(
+        matchId: Int,
+        threadId: Long,
+    ): List<Comment> = withContext(Dispatchers.IO) {
+
+        DatabaseFactory.getConnection().use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT
+                    c.id,
+                    c.thread_id,
+                    t.match_id,
+                    c.author,
+                    c.content,
+                    c.created_at
+                FROM comments AS c
+                INNER JOIN threads AS t
+                    ON c.thread_id = t.id
+                WHERE t.id = ?
+                  AND t.match_id = ?
+                  AND t.status = 'CLOSED'
+                ORDER BY c.created_at, c.id
+                """.trimIndent()
+            ).use { statement ->
+                statement.setLong(1, threadId)
+                statement.setLong(2, matchId.toLong())
+
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) {
+                            add(
+                                Comment(
+                                    id = result.getLong("id"),
+                                    threadId = result.getLong("thread_id"),
+                                    matchId = result.getInt("match_id"),
+                                    author = result.getString("author"),
+                                    text = result.getString("content"),
+                                    createdAt = result
+                                        .getTimestamp("created_at")
+                                        .toInstant()
+                                        .toString(),
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
