@@ -14,6 +14,31 @@ import io.ktor.server.routing.route
 fun Route.commentRoutes(
     commentRepository: CommentRepository,
 ) {
+
+
+    route("/matches/{matchId}/threads") {
+        get {
+            val matchId = call.parameters["matchId"]?.toIntOrNull()
+
+            if (matchId == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("message" to "Invalid matchId")
+                )
+                return@get
+            }
+
+            val threads = commentRepository.getArchivedThreads(matchId)//nullチェック後の必要がある。
+
+            call.respond(
+                HttpStatusCode.OK,
+                threads
+            )
+        }
+    }
+
+
+
     route("/matches/{matchId}/comments") {
         get {//コメント欄返す用
             val matchId = call.parameters["matchId"]?.toIntOrNull()
@@ -94,6 +119,35 @@ fun Route.commentRoutes(
             call.respond(//Retrofitへ
                 HttpStatusCode.Created,
                 comment
+            )
+        }
+    }
+
+
+
+
+    route("/matches/{matchId}/threads/{threadId}/comments") {
+
+        get {
+            val matchId = call.parameters["matchId"]?.toIntOrNull()
+            val threadId = call.parameters["threadId"]?.toLongOrNull()
+
+            if (matchId == null || threadId == null) {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("message" to "Invalid matchId or threadId")
+                )
+                return@get
+            }
+
+            val comments = commentRepository.getArchivedComments(
+                matchId = matchId,
+                threadId = threadId
+            )
+
+            call.respond(
+                HttpStatusCode.OK,
+                comments
             )
         }
     }

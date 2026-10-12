@@ -6,6 +6,7 @@ import com.example.soccerapp.data.remote.api.CommentApiService
 import com.example.soccerapp.data.remote.dto.CreateCommentRequestDto
 import com.example.soccerapp.data.repository.CommentRepository
 import javax.inject.Inject
+import com.example.soccerapp.data.model.ArchivedThread
 
 class NetworkCommentRepository @Inject constructor(
     private val commentApiService: CommentApiService,
@@ -28,6 +29,7 @@ class NetworkCommentRepository @Inject constructor(
             id = commentDto.id,
             matchId = commentDto.matchId,
             author = commentDto.author,
+            threadId = commentDto.threadId,
             text = commentDto.text,
             createdAt = commentDto.createdAt,
         )
@@ -42,10 +44,48 @@ class NetworkCommentRepository @Inject constructor(
             Comment(
                 id = commentDto.id,
                 matchId = commentDto.matchId,
+                threadId = commentDto.threadId,
                 author = commentDto.author,
                 text = commentDto.text,
                 createdAt = commentDto.createdAt,
 
+            )
+        }
+    }
+
+    override suspend fun getArchivedThreads(
+        matchId: Int
+    ): List<ArchivedThread> {
+
+        val threadDtos = commentApiService.getArchivedThreads(
+            matchId = matchId
+        )
+
+        return threadDtos.map { dto ->
+            ArchivedThread(
+                threadId = dto.threadId,
+                number = dto.number
+            )
+        }
+    }
+
+    override suspend fun getArchivedComments(
+        matchId: Int,
+        threadId: Long,
+    ): List<Comment> {
+        val commentDtos = commentApiService.getArchivedComments(
+            matchId = matchId,
+            threadId = threadId,
+        )
+
+        return commentDtos.map { commentDto ->
+            Comment(
+                id = commentDto.id,
+                matchId = commentDto.matchId,
+                threadId = commentDto.threadId,
+                author = commentDto.author,
+                text = commentDto.text,
+                createdAt = commentDto.createdAt,
             )
         }
     }

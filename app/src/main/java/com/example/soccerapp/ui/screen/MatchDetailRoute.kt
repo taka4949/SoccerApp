@@ -21,7 +21,7 @@ fun MatchDetailRoute(
     val uiState by
     viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(matchId) {
+    LaunchedEffect(matchId) {//普通にComposableの本体から呼ぶと再コンポーズのたびに実行される可能性在り
         viewModel.loadMatch(matchId)
     }
 

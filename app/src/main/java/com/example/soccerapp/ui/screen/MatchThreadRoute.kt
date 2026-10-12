@@ -12,6 +12,8 @@ import com.example.soccerapp.ui.CommentSection
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.soccerapp.ui.CommentPostSection
 import com.example.soccerapp.ui.state.MatchThreadUiState
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 
 
 @Composable
@@ -26,7 +28,8 @@ fun ColumnScope.MatchThreadRoute(){//親columnのスコープ→この中でweig
     val isPosting = (uiState as? MatchThreadUiState.Success)?.isPosting ?: false
 
 
-
+    val refreshErrorMessage =
+        (uiState as? MatchThreadUiState.Success)?.refreshErrorMessage
 
 
     CommentSection(
@@ -34,6 +37,20 @@ fun ColumnScope.MatchThreadRoute(){//親columnのスコープ→この中でweig
         onRetry = viewModel::loadComments,
         modifier = Modifier.weight(1f)//columnの余分な部分を使える
     )
+
+
+
+    if (refreshErrorMessage != null) {
+        Text(text = refreshErrorMessage)
+    }
+
+    Button(
+        onClick = viewModel::loadComments,
+        enabled = !isPosting
+    ) {
+        Text("Refresh")
+    }
+
 
     CommentPostSection(
         author = (uiState as? MatchThreadUiState.Success)?.author ?: "",

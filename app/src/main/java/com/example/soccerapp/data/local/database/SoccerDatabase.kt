@@ -12,21 +12,16 @@ import com.example.soccerapp.data.local.entity.MatchEntity
         MatchEntity::class,
         LeagueEntity::class
     ],//このデータベースに含めるentityの登録。[]は複数所持可能という意味。
+
     version = 3,//roomに変更を知らせるため
+
     exportSchema = false//データベースのテーブル設計を、確認・テスト用のJSONファイルとして出力しない設定。詳しくは後ほど。
 )
 abstract class SoccerDatabase : RoomDatabase() {//soccer_databaseというSQLiteファイルとの接続管理
 
     abstract fun matchDao(): MatchDao//SQLiteへ保存する方法
-
     abstract fun leagueDao(): LeagueDao
 }
-
-
-
-
-
-
 
 
 

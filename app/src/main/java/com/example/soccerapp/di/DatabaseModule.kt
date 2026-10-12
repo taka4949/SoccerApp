@@ -16,7 +16,7 @@ import com.example.soccerapp.data.local.database.MIGRATION_2_3
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DatabaseModule {//objectとは、1個。
+object DatabaseModule {//objectは1個。
 
     @Provides//下に書く関数がかえすものをhiltに登録する(外部ライブラリのため、Provides)
     @Singleton
@@ -53,11 +53,9 @@ object DatabaseModule {//objectとは、1個。
     }
 }
 
-
-
-
-
 //このファイルの役割
+
+
 //1. SoccerDatabaseは、この方法で用意する
 //2. MatchDaoは、SoccerDatabaseから取り出す
 

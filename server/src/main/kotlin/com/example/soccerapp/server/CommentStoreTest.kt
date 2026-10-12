@@ -12,6 +12,7 @@ class CommentStoreTest : CommentRepository {//テスト用
     ): Comment {
         val comment = Comment(
             id = nextId,
+            threadId = 1L,
             matchId = matchId,
             author = request.author,
             text = request.text,
@@ -27,6 +28,25 @@ class CommentStoreTest : CommentRepository {//テスト用
     override suspend fun getByMatchId(matchId: Int): List<Comment> {//掲示板を開くときに動く
         return comments.filter { comment ->//今の段階では、リストにごちゃまぜでコメントが入っている。
             comment.matchId == matchId
+        }
+    }
+
+
+
+    override suspend fun getArchivedThreads(
+        matchId: Int
+    ): List<ArchivedThreadDto> = emptyList()
+
+
+
+
+    override suspend fun getArchivedComments(
+        matchId: Int,
+        threadId: Long
+    ): List<Comment> {
+        return comments.filter { comment ->
+            comment.matchId == matchId &&
+                    comment.threadId == threadId
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.soccerapp.ui.state
 
+import com.example.soccerapp.data.model.ArchivedThread
 import com.example.soccerapp.data.model.League
 import com.example.soccerapp.data.model.Match
 
@@ -17,4 +18,5 @@ sealed interface MainUiState {//sealedはuiの状態の種類を制限する→�
     ) : MainUiState
 }
 
-//
+
+

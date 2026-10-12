@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class CommentDto(
     val id: Long,
     val matchId: Int,
+    val threadId: Long,
     val author: String,
     val text: String,
     val createdAt: String,

@@ -13,6 +13,9 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.soccerapp.ui.MatchListScreen
 import com.example.soccerapp.ui.screen.MatchDetailRoute
+import com.example.soccerapp.ui.MatchMenuScreen
+import com.example.soccerapp.ui.screen.ArchivedThreadsRoute
+import com.example.soccerapp.ui.screen.ArchivedCommentsRoute
 
 @Composable
 fun AppNavigation(
@@ -59,8 +62,39 @@ fun AppNavigation(
 
 
 
+
+
         composable(
             route = "match/{matchId}",
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.IntType
+                }
+            )
+        ) {
+            backStackEntry ->
+
+            val matchId = requireNotNull(
+                backStackEntry.arguments?.getInt("matchId")
+            )
+
+
+
+
+
+            MatchMenuScreen(//掲示板or過去コメの選択画面
+                onLiveClick = {
+                    navController.navigate("match/$matchId/live")
+                },
+                onArchivesClick = {
+                    navController.navigate("match/$matchId/archives")
+                }
+            )
+        }
+
+
+        composable(
+            route = "match/{matchId}/live",
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
@@ -77,7 +111,79 @@ fun AppNavigation(
             )
         }
 
+
+
+
+        composable(
+            route = "match/{matchId}/archives",
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+
+            val matchId = requireNotNull(
+                backStackEntry.arguments?.getInt("matchId")
+            )
+
+            ArchivedThreadsRoute(
+                onThreadClick = { threadId ->
+                    navController.navigate(
+                        "match/$matchId/archives/$threadId"
+                    )
+
+                }
+            )
+        }
+
+        composable(
+            route = "match/{matchId}/archives/{threadId}",
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.IntType
+                },
+                navArgument("threadId") {
+                    type = NavType.LongType
+                }
+            )
+        ) {
+
+            ArchivedCommentsRoute()
+        }
+
     }
 }
-
+//threadID
+//Cardをタップ(スレッド一覧から）
+//    ↓
+//onThreadClick(15L)
+//    ↓
+//navController.navigate("match/123/archives/15")
+//    ↓
+//Navigationが登録されたcomposableを探す
+//    ↓
+//composable("match/{matchId}/archives/{threadId}") に一致
+//    ↓
+//ArchivedCommentsRoute() が実行される
+//    ↓
+//hiltViewModel<ArchivedCommentsViewModel>()
+//    ↓
+//SavedStateHandleから
+//matchId = 123
+//threadId = 15L を取得
+//    ↓
+//init → loadArchivedComments()
+//    ↓
+//repository.getArchivedComments(123, 15L)
+//    ↓
+//Retrofit → Ktor → PostgreSQL
+//    ↓
+//コメント一覧が返る
+//    ↓
+//_uiState.value = Success(comments)
+//    ↓
+//ArchivedCommentsScreenが再コンポーズ
+//    ↓
+//過去ログ15のコメントが画面に表示される
 
