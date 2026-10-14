@@ -1,0 +1,152 @@
+[1mdiff --git a/app/src/main/java/com/example/soccerapp/MainActivity.kt b/app/src/main/java/com/example/soccerapp/MainActivity.kt[m
+[1mindex dfff1c1..adde445 100644[m
+[1m--- a/app/src/main/java/com/example/soccerapp/MainActivity.kt[m
+[1m+++ b/app/src/main/java/com/example/soccerapp/MainActivity.kt[m
+[36m@@ -7,13 +7,8 @@[m [mimport androidx.compose.foundation.layout.fillMaxSize[m
+ import androidx.compose.foundation.layout.safeDrawingPadding[m
+ import androidx.compose.material3.MaterialTheme[m
+ import androidx.compose.material3.Surface[m
+[31m-import androidx.compose.runtime.collectAsState[m
+[31m-import androidx.compose.runtime.getValue[m
+ import androidx.compose.ui.Modifier[m
+[31m-import androidx.lifecycle.compose.collectAsStateWithLifecycle[m
+[31m-import androidx.lifecycle.viewmodel.compose.viewModel[m
+[31m-import com.example.soccerapp.navigation.AppNavigation[m
+[31m-import com.example.soccerapp.ui.screen.MainRoute[m
+[32m+[m[32mimport com.example.soccerapp.ui.route.StartupRoute[m
+ import dagger.hilt.android.AndroidEntryPoint[m
+ [m
+ [m
+[36m@@ -25,7 +20,7 @@[m [mclass MainActivity : ComponentActivity() {[m
+         setContent {[m
+             MaterialTheme {[m
+                 Surface(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {[m
+[31m-                 MainRoute()[m
+[32m+[m[32m                    StartupRoute()[m
+                 }[m
+             }[m
+         }[m
+[1mdiff --git a/app/src/main/java/com/example/soccerapp/StartupViewModel.kt b/app/src/main/java/com/example/soccerapp/StartupViewModel.kt[m
+[1mnew file mode 100644[m
+[1mindex 0000000..c04b490[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/soccerapp/StartupViewModel.kt[m
+[36m@@ -0,0 +1,71 @@[m
+[32m+[m[32mpackage com.example.soccerapp[m
+[32m+[m
+[32m+[m[32mimport androidx.lifecycle.ViewModel[m
+[32m+[m[32mimport androidx.lifecycle.viewModelScope[m
+[32m+[m[32mimport com.example.soccerapp.data.repository.UserPreferencesRepository[m
+[32m+[m[32mimport dagger.hilt.android.lifecycle.HiltViewModel[m
+[32m+[m[32mimport javax.inject.Inject[m
+[32m+[m[32mimport kotlinx.coroutines.flow.SharingStarted[m
+[32m+[m[32mimport kotlinx.coroutines.flow.StateFlow[m
+[32m+[m[32mimport kotlinx.coroutines.flow.map[m
+[32m+[m[32mimport kotlinx.coroutines.flow.stateIn[m
+[32m+[m[32mimport kotlinx.coroutines.launch[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@HiltViewModel[m
+[32m+[m[32mclass StartupViewModel @Inject constructor([m
+[32m+[m[32m    private val preferencesRepository: UserPreferencesRepository[m
+[32m+[m[32m) : ViewModel() {[m
+[32m+[m
+[32m+[m[32m    val showAccountPrompt: StateFlow<Boolean?> =[m
+[32m+[m[32m        preferencesRepository.hasSeenAccountPrompt[m
+[32m+[m[32m            .map<Boolean, Boolean?> { hasSeen -> !hasSeen }[m
+[32m+[m[32m            .stateIn([m
+[32m+[m[32m                scope = viewModelScope,[m
+[32m+[m[32m                started = SharingStarted.WhileSubscribed(),[m
+[32m+[m[32m                initialValue = null//初期画面（これを保持するにはstate型にする必要ある）[m
+[32m+[m[32m            )[m
+[32m+[m[32m    //初回false→trueへ→RouteのshowPrompt=trueへ[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    fun dismissAccountPrompt() {[m
+[32m+[m[32m        viewModelScope.launch {[m
+[32m+[m[32m            preferencesRepository.markPromptAsSeen()//trueへ変更→このファイルではfalseへ変更[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m//アプリアイコンをタップ[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//MainActivityが起動[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//StartupViewModelが作られる[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//showAccountPrompt = null[m
+[32m+[m[32m//（判定前）[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//DataStoreを読み取る[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//保存キーがまだない[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//Repositoryがfalseを返す[m
+[32m+[m[32m//（以前に案内を見ていない）[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//mapで!false → true[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//showAccountPrompt = true[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//登録案内を表示[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//ユーザーが「スキップ」を押す[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//DataStoreに表示済みのtrueを保存[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//Repositoryからtrueが届く[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//mapで!true → false[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//showAccountPrompt = false[m
+[32m+[m[32m//    ↓[m
+[32m+[m[32m//通常画面を表示[m
+\ No newline at end of file[m
+[1mdiff --git a/app/src/main/java/com/example/soccerapp/data/repository/UserPreferencesRepository.kt b/app/src/main/java/com/example/soccerapp/data/repository/UserPreferencesRepository.kt[m
+[1mnew file mode 100644[m
+[1mindex 0000000..6c401b6[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/soccerapp/data/repository/UserPreferencesRepository.kt[m
+[36m@@ -0,0 +1,39 @@[m
+[32m+[m[32mpackage com.example.soccerapp.data.repository[m
+[32m+[m
+[32m+[m[32mimport android.content.Context[m
+[32m+[m[32mimport androidx.datastore.preferences.core.booleanPreferencesKey[m
+[32m+[m[32mimport androidx.datastore.preferences.core.edit[m
+[32m+[m[32mimport androidx.datastore.preferences.preferencesDataStore[m
+[32m+[m[32mimport dagger.hilt.android.qualifiers.ApplicationContext[m
+[32m+[m[32mimport kotlinx.coroutines.flow.Flow[m
+[32m+[m[32mimport kotlinx.coroutines.flow.map[m
+[32m+[m[32mimport javax.inject.Inject[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mprivate val Context.dataStore by preferencesDataStore([m
+[32m+[m[32m    name = "user_preferences"[m
+[32m+[m[32m)[m
+[32m+[m
+[32m+[m[32mclass UserPreferencesRepository @Inject constructor([m
+[32m+[m[32m    @ApplicationContext private val context: Context[m
+[32m+[m[32m) {[m
+[32m+[m[32m    private val hasSeenPromptKey =[m
+[32m+[m[32m        booleanPreferencesKey("has_seen_account_prompt")//Key（map)[m
+[32m+[m
+[32m+[m[32m    val hasSeenAccountPrompt: Flow<Boolean> =[m
+[32m+[m[32m        context.dataStore.data.map { preferences ->[m
+[32m+[m[32m            preferences[hasSeenPromptKey] ?: false//保存された値を読み取り、変更されたとき新しい値受け取る[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m    suspend fun markPromptAsSeen() {[m
+[32m+[m[32m        context.dataStore.edit { preferences ->[m
+[32m+[m[32m            preferences[hasSeenPromptKey] = true//値を保存[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m//activityContext:画面表示やテーマなど、Activityに依存する機能を扱う際に適している。[m
+[32m+[m[32m//applicationContextは、 特定のMainActivityインスタンスを指していない。[m
+[32m+[m[32m//そのため、Activityが作り直されても、同じアプリプロセス内では引き続きアプリケーション側のContextを利用できる。[m
+[32m+[m[32m//Activityの生存期間を超えて、そのActivityへの参照を保持し続ける→Contextの不適切な保持によってメモリリーク[m
+\ No newline at end of file[m

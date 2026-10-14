@@ -6,6 +6,7 @@ import retrofit2.http.Query
 
 
 import com.example.soccerapp.data.remote.dto.CompetitionsResponseDto
+import com.example.soccerapp.data.remote.dto.MatchDto
 import retrofit2.http.GET
 
 interface SoccerApiService {
@@ -20,6 +21,11 @@ interface SoccerApiService {
     @GET("competitions/{competitionCode}/matches")
     suspend fun getMatches(
         @Path("competitionCode") competitionCode: String,//urlの途中へ引数の値を差し替える。
-        @Query("status") status: String//条件
     ): MatchesResponseDto
+
+
+    @GET("matches/{matchId}")
+    suspend fun getMatch(
+        @Path("matchId") matchId: Int
+    ): MatchDto
 }

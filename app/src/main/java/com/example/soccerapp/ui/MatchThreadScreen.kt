@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.example.soccerapp.data.model.Match
-import com.example.soccerapp.ui.screen.MatchThreadRoute
+import com.example.soccerapp.ui.route.MatchThreadRoute
 import com.example.soccerapp.ui.state.MatchThreadUiState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,14 +18,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.testTag
@@ -36,7 +28,10 @@ import coil3.compose.AsyncImage
 
 @Composable
 fun MatchThreadScreen(
-    match: Match
+    match: Match,
+    isRefreshing: Boolean,
+    refreshError: String?,
+    onRefresh: () -> Unit
 ) {
 
     println("MatchThreadScreen recomposed")
@@ -106,6 +101,29 @@ fun MatchThreadScreen(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+        }
+
+
+
+        Button(//スコア更新ボタン
+            onClick = onRefresh,
+            enabled = !isRefreshing,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = if (isRefreshing) {
+                    "Updating..."
+                } else {
+                    "Refresh Score"
+                }
+            )
+        }
+
+        if (refreshError != null) {
+            Text(
+                text = refreshError,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         HorizontalDivider()

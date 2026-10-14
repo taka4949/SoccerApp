@@ -43,6 +43,16 @@ fun MatchListScreen(
         )
     ) {
         items(sortedMatches) { match ->
+
+            val statusText = when (match.status) {
+                "IN_PLAY", "LIVE" -> "LIVE"
+                "PAUSED" -> "HALF TIME"
+                "FINISHED" -> "FT"
+                "SCHEDULED", "TIMED" -> "UPCOMING"
+                "POSTPONED" -> "POSTPONED"
+                else -> match.status
+            }
+
             Column {
 
                 Text(
@@ -112,8 +122,23 @@ fun MatchListScreen(
 
 
                     Spacer(
-                        modifier = Modifier.width(16.dp)
+                        modifier = Modifier.width(8.dp)
                     )
+
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (match.status == "IN_PLAY" || match.status == "LIVE") {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(8.dp)
+                    )
+
 
                     Text(
                         text = ">"

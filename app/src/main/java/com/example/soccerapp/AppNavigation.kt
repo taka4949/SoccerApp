@@ -7,15 +7,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.soccerapp.data.model.League
 import com.example.soccerapp.data.model.Match
 import com.example.soccerapp.ui.LeagueListScreen
-import com.example.soccerapp.ui.MatchThreadScreen
-import androidx.compose.material3.Text
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.soccerapp.ui.MatchListScreen
-import com.example.soccerapp.ui.screen.MatchDetailRoute
+import com.example.soccerapp.ui.route.MatchDetailRoute
 import com.example.soccerapp.ui.MatchMenuScreen
-import com.example.soccerapp.ui.screen.ArchivedThreadsRoute
-import com.example.soccerapp.ui.screen.ArchivedCommentsRoute
+import com.example.soccerapp.ui.route.ArchivedThreadsRoute
+import com.example.soccerapp.ui.route.ArchivedCommentsRoute
 
 @Composable
 fun AppNavigation(

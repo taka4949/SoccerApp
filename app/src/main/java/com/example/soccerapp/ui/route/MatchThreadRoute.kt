@@ -1,9 +1,7 @@
-package com.example.soccerapp.ui.screen
+package com.example.soccerapp.ui.route
 
-import android.util.Log
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle

@@ -4,6 +4,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.example.soccerapp.data.local.entity.MatchEntity
+import kotlinx.coroutines.flow.Flow
+
+
 
 @Dao//どう保存するのかを決める
 interface MatchDao {
@@ -21,4 +24,10 @@ interface MatchDao {
     suspend fun getMatchById(
         matchId: Int
     ): MatchEntity?
+
+
+    @Query("SELECT * FROM matches WHERE leagueId = :leagueId")
+    fun observeMatchesByLeague(
+        leagueId: String
+    ): Flow<List<MatchEntity>>
 }

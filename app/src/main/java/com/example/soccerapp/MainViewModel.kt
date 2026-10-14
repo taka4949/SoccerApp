@@ -25,7 +25,7 @@ class MainViewModel @Inject constructor(
     private val _uiState =
         MutableStateFlow<MainUiState>(
             MainUiState.Loading
-        )
+        )//StateFlowはFlowと比べ、常に現在の値を１つ保持している。
 
     val uiState: StateFlow<MainUiState> =
         _uiState.asStateFlow()//外部用。
@@ -33,6 +33,10 @@ class MainViewModel @Inject constructor(
 
     private var loadMatchesJob: Job? = null
     private var loadingCompetitionCode: String? = null
+
+    private var observeMatchesJob: Job? = null
+
+    private var observedCompetitionCode: String? = null
 
     init {//LaunchedEffectとの違い重要。こっちは変化ないものを使う。再コンポーズでは通信を1回で済ませられる。
         loadData()
@@ -75,9 +79,33 @@ class MainViewModel @Inject constructor(
         }
 
 
-        loadMatchesJob?.cancel()
+        loadMatchesJob?.cancel()//リーグが違うなら以前のコルーチンをキャンセル
 
         loadingCompetitionCode = competitionCode
+
+
+
+        if (observedCompetitionCode != competitionCode) {//二度タップしたらコルーチンキャンセル、別リーグなら以前のコルーチンを止める。
+            observeMatchesJob?.cancel()
+
+            observedCompetitionCode = competitionCode
+
+            observeMatchesJob = viewModelScope.launch {//リーグ選択時に1回関数動く。Flow作る。
+                repository.observeMatches(competitionCode)//collectがroom内のテーブル変更を感知
+                    .collect { matches ->
+
+                        val state =
+                            _uiState.value as? MainUiState.Success
+                                ?: return@collect
+
+                        if (loadingCompetitionCode == competitionCode) {
+                            _uiState.value = state.copy(
+                                matches = matches
+                            )
+                        }
+                    }
+            }
+        }
 
         loadMatchesJob =  viewModelScope.launch {//Dispatcherを指定していない＝ViewmodelScopeの設定を引き継ぐ
             val currentState = _uiState.value
@@ -106,5 +134,78 @@ class MainViewModel @Inject constructor(
     }
 }
 
+//最初にリーグをタップ(Flow仕組み）
+//
+//LeagueListScreen
+//  .clickable
+//       ↓
+//AppNavigation
+//  onLeagueSelected(leagueId)
+//       ↓
+//MainRouteから渡された
+//  mainViewModel.loadMatches(leagueId)
+//       ↓
+//MainViewModel
+//  loadMatches()
+//       │
+//       ├── repository.observeMatches("PL")
+//       │         ↓
+//       │    MatchRepository.observeMatches()
+//       │         ↓
+//       │    MatchDao.observeMatchesByLeague()
+//       │         ↓
+//       │    RoomがFlowを提供
+//       │         ↓
+//       │    collect開始
+//       │         ↓
+//       │    Roomが最初の試合一覧を返す
+//       │
+//       └── repository.getMatches("PL")
+//                 ↓
+//            RetrofitでAPI取得
+//                 ↓
+//            Roomに試合一覧を保存
+//                 ↓
+//            Roomが変更を検知
+//                 ↓
+//            SQLを再実行
+//                 ↓
+//            mapでMatchに変換
+//                 ↓
+//            MainViewModelのcollectへ
+//                 ↓
+//            _uiState.value更新
+//
+//
+//その後、試合詳細で更新ボタンを押す
+//
+//MatchThreadScreen
+//  onRefresh()
+//       ↓
+//MatchDetailViewModel
+//  refreshMatch()
+//       ↓
+//MatchRepository
+//  refreshMatchById()
+//       ↓
+//Retrofit
+//  最新の試合情報を取得
+//       ↓
+//MatchDao
+//  upsertMatches()
+//       ↓
+//Roomのmatchesテーブル変更
+//       ↓
+//RoomがSQLを再実行
+//       ↓
+//Repositoryのmap再実行
+//       ↓
+//MainViewModelのcollect再実行
+//       ↓
+//_uiState.value更新
+//       ↓
+//MainRouteが新しいuiStateを受信
+//       ↓
+//MatchListScreenの表示が更新
 
 

@@ -2,6 +2,7 @@ package com.example.soccerapp.data.repository
 
 import com.example.soccerapp.data.model.League
 import com.example.soccerapp.data.model.Match
+import kotlinx.coroutines.flow.Flow
 
 
 interface SoccerRepository {
@@ -19,6 +20,14 @@ interface SoccerRepository {
 
 
     suspend fun getCachedLeagues(): List<League>
+
+
+    suspend fun refreshMatchById(matchId: Int): Match
+
+
+    fun observeMatches(
+        competitionCode: String
+    ): Flow<List<Match>>
 
 }
 
