@@ -7,13 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.soccerapp.navigation.AppNavigation
-import com.example.soccerapp.ui.screen.MainRoute
+import com.example.soccerapp.ui.route.StartupRoute
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -25,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
-                 MainRoute()
+                    StartupRoute()
                 }
             }
         }

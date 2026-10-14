@@ -1,4 +1,4 @@
-package com.example.soccerapp.ui.screen
+package com.example.soccerapp.ui.route
 
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -32,7 +32,12 @@ fun MatchDetailRoute(
 
         is MatchDetailUiState.Success -> {
             MatchThreadScreen(
-                match = state.match
+                match = state.match,
+                isRefreshing = state.isRefreshing,
+                refreshError = state.refreshError,
+                onRefresh = {
+                    viewModel.refreshMatch(matchId)
+                }
             )
         }
 

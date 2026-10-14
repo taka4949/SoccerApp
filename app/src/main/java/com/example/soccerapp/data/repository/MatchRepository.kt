@@ -10,6 +10,8 @@ import com.example.soccerapp.data.remote.api.SoccerApiService
 import kotlinx.coroutines.CancellationException
 import com.example.soccerapp.data.local.dao.LeagueDao
 import com.example.soccerapp.data.local.entity.LeagueEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
 class MatchRepository@Inject constructor(
@@ -87,7 +89,6 @@ class MatchRepository@Inject constructor(
         return try {
             val response = soccerApiService.getMatches(
                 competitionCode = competitionCode,
-                status = "SCHEDULED" // 未定の試合のみ
             )
 
             val matches = response.matches // APIから取得(Dto)
@@ -138,7 +139,7 @@ class MatchRepository@Inject constructor(
             if (cachedMatches.isEmpty()) {
                 throw e
             }
-            
+
 
             cachedMatches.map { match ->//Entities→Match.ktへ
                 Match(
@@ -179,4 +180,65 @@ class MatchRepository@Inject constructor(
             awayTeamCrest = match.awayTeamCrest
         )
     }
+
+    override suspend fun refreshMatchById(matchId: Int): Match {
+        val dto = soccerApiService.getMatch(matchId)
+
+        val match = Match(
+            id = dto.id,
+            leagueId = dto.competition.code,
+            homeTeam = dto.homeTeam.name ?: "Unknown",
+            awayTeam = dto.awayTeam.name ?: "Unknown",
+            homeScore = dto.score.fullTime.home,
+            awayScore = dto.score.fullTime.away,
+            utcDate = dto.utcDate,
+            status = dto.status,
+            homeTeamCrest = dto.homeTeam.crest,
+            awayTeamCrest = dto.awayTeam.crest
+        )
+
+        matchDao.upsertMatches(//試合詳細開きなおす時にも反映するように
+            listOf(
+                MatchEntity(
+                    id = match.id,
+                    leagueId = match.leagueId,
+                    homeTeam = match.homeTeam,
+                    awayTeam = match.awayTeam,
+                    homeScore = match.homeScore,
+                    awayScore = match.awayScore,
+                    utcDate = match.utcDate,
+                    status = match.status,
+                    homeTeamCrest = match.homeTeamCrest,
+                    awayTeamCrest = match.awayTeamCrest
+                )
+            )
+        )
+
+        return match
+    }
+
+
+    override fun observeMatches(//試合リストの試合ステータスを更新
+        competitionCode: String
+    ): Flow<List<Match>> {
+        return matchDao.observeMatchesByLeague(competitionCode)
+            .map { entities ->
+                entities.map { match ->
+                    Match(
+                        id = match.id,
+                        leagueId = match.leagueId,
+                        homeTeam = match.homeTeam,
+                        awayTeam = match.awayTeam,
+                        homeScore = match.homeScore,
+                        awayScore = match.awayScore,
+                        utcDate = match.utcDate,
+                        status = match.status,
+                        homeTeamCrest = match.homeTeamCrest,
+                        awayTeamCrest = match.awayTeamCrest
+                    )
+                }
+            }
+    }
+
+
 }

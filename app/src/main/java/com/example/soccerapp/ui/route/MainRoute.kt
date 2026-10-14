@@ -1,4 +1,4 @@
-package com.example.soccerapp.ui.screen
+package com.example.soccerapp.ui.route
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

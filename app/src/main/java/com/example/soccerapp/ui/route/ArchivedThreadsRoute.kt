@@ -1,5 +1,5 @@
 
-package com.example.soccerapp.ui.screen
+package com.example.soccerapp.ui.route
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

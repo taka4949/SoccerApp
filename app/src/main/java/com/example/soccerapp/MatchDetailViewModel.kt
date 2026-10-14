@@ -55,4 +55,37 @@ class MatchDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun refreshMatch(matchId: Int) {
+        val currentState =
+            _uiState.value as? MatchDetailUiState.Success
+                ?: return
+
+        if (currentState.isRefreshing) return
+
+        viewModelScope.launch {
+            _uiState.value = currentState.copy(
+                isRefreshing = true,
+                refreshError = null
+            )
+
+            try {
+                val match = repository.refreshMatchById(matchId)
+
+                _uiState.value = currentState.copy(
+                    match = match,
+                    isRefreshing = false,
+                    refreshError = null
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.value = currentState.copy(
+                    isRefreshing = false,
+                    refreshError = e.message ?: "Refresh failed"
+                )
+            }
+        }
+    }
+
 }
