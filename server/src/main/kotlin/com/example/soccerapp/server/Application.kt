@@ -38,7 +38,7 @@ fun Application.module(
     }
 
 
-    routing {//通信完了→OKと送る。返信用
+    routing {//通信完了→OKと送る。返信の形指定
         get("/health") {
             call.respondText(
                 text = """{"status":"ok"}""",
@@ -50,6 +50,7 @@ fun Application.module(
 
 
         commentRoutes(commentRepository)//本番
+        authRoutes(JdbcAuthRepository())
     }
 
 }

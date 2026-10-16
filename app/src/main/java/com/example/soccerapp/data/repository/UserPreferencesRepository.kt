@@ -26,7 +26,7 @@ class UserPreferencesRepository @Inject constructor(
             preferences[hasSeenPromptKey] ?: false//保存された値を読み取り、変更されたとき新しい値受け取る
         }
 
-    suspend fun markPromptAsSeen() {
+    suspend fun markPromptAsSeen() {//これ呼ばれたらスキップ
         context.dataStore.edit { preferences ->
             preferences[hasSeenPromptKey] = true//値を保存
         }
