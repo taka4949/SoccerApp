@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
-class JdbcCommentRepository : CommentRepository {
+class JdbcCommentRepository : CommentRepository {//DB操作
 
 
 //スレッド管理はKtor側

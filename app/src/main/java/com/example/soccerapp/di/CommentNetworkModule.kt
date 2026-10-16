@@ -13,6 +13,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.example.soccerapp.data.remote.api.CommentApiService
+import com.example.soccerapp.data.remote.api.AuthApiService
 
 
 @Module
@@ -56,6 +57,7 @@ object CommentNetworkModule {
             CommentApiService::class.java
         )
     }
+
 }
 
 

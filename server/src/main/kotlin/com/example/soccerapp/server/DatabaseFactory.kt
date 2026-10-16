@@ -3,7 +3,7 @@ package com.example.soccerapp.server
 import java.sql.Connection
 import java.sql.DriverManager
 
-object DatabaseFactory {//postgreSQLへ接続するために必要なものを作るファイル
+object DatabaseFactory {//postgreSQLへ接続するために必要なものを作る（このファイル）
 private val URL =
     System.getenv("SOCCER_DB_URL")
         ?: "jdbc:postgresql://localhost:5432/soccer_app"
@@ -25,8 +25,25 @@ private val URL =
     }
 
 
+//:server:run
+//    ↓
+//main()
+//    ↓
+//DatabaseFactory.verifyConnection()
+//    ↓
+//PostgreSQLとの接続確認
+//    ↓
+//embeddedServer()
+//    ↓
+//module()
+//    ↓
+//routingの設定
+//    ↓
+//POST /auth/registerを受け付けられる状態
 
-    fun verifyConnection() {//ポスグレを接続できるか確認用
+
+
+    fun verifyConnection() {//ポスグレを接続できるか確認
         getConnection().use { connection ->
             connection.prepareStatement("SELECT current_database()").use { statement ->
                 statement.executeQuery().use { result ->

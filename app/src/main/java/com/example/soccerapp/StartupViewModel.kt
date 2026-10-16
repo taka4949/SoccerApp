@@ -28,7 +28,7 @@ class StartupViewModel @Inject constructor(
     //初回false→trueへ→RouteのshowPrompt=trueへ
 
 
-    fun dismissAccountPrompt() {
+    fun dismissAccountPrompt() {//初回登録画面の表示を以後スキップ
         viewModelScope.launch {
             preferencesRepository.markPromptAsSeen()//trueへ変更→このファイルではfalseへ変更
         }

@@ -38,9 +38,10 @@ class MainViewModel @Inject constructor(
 
     private var observedCompetitionCode: String? = null
 
-    init {//LaunchedEffectとの違い重要。こっちは変化ないものを使う。再コンポーズでは通信を1回で済ませられる。
+    init {//LaunchedEffectは、変化するkeyを使う。（双方とも記述された関数内のものを動かす）。initは1回通信する。
         loadData()
     }
+    //LaunchedEffectはComposableがCompositionに入ったときに処理される。initは、記述されているクラスのインスタンスが生成される際に実行
     fun loadData() {
          viewModelScope.launch {//scope＝寿命が必要な理由は、無駄な更新の負担を無くすため。launchがコルーチンの状態を管理している。
             _uiState.value =

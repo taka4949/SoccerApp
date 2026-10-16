@@ -11,7 +11,7 @@ import io.ktor.server.routing.route
 
 
 
-fun Route.commentRoutes(
+fun Route.commentRoutes(//HTTP通信
     commentRepository: CommentRepository,
 ) {
 
