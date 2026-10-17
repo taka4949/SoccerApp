@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -132,65 +133,86 @@ fun MatchThreadScreen(
 
 @Composable
 fun CommentSection(
-    uiState: MatchThreadUiState,
-    onRetry: () -> Unit,
+    uiState : MatchThreadUiState,
+    onRetry : () -> Unit,
     modifier: Modifier = Modifier
-) {
+    ){
+
     when (uiState) {
         MatchThreadUiState.Loading -> {
             Box(
-                modifier = modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = PrimaryPurple)
+                CircularProgressIndicator()
             }
         }
+
         is MatchThreadUiState.Success -> {
-            LazyColumn(modifier = modifier.fillMaxWidth()) {
-                items(uiState.comments, key = { it.id }) { comment ->
+            LazyColumn(
+                modifier = modifier//weight(1f)
+            ) {
+                items(uiState.comments,
+                    key = {it.id}//commentId→見分けられる
+                ) { comment ->
+
                     Column(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                        ){
                             Text(
-                                comment.author,
-                                color = PrimaryText,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                text = comment.author,
+                                style = MaterialTheme.typography.titleMedium
                             )
                             Text(
-                                comment.createdAt,
-                                color = SecondaryText,
-                                fontSize = 10.sp
+                                text = comment.createdAt,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
+
+
+
                         Text(
-                            comment.text,
-                            color = PrimaryText,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(top = 6.dp, bottom = 10.dp)
+                            text = comment.text,
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                        HorizontalDivider(color = LineColor)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                     }
+
                 }
             }
         }
+
         is MatchThreadUiState.Error -> {
             Column(
-                modifier = modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(uiState.message, color = PrimaryText)
-                Button(onClick = onRetry) { Text("再試行") }
+                Text(
+                    text = uiState.message
+                )
+
+                Button(
+                    onClick = {
+                        onRetry()
+                    }
+                ) {
+                    Text(
+                        text = "Retry"
+                    )
+                }
             }
         }
     }
-}
+    }
 
 @Composable
 fun CommentPostSection(
@@ -202,58 +224,52 @@ fun CommentPostSection(
     postErrorMessage: String?,
     onPostComment: (String, String) -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().background(ScreenBackground)
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+
+
+
+    OutlinedTextField(
+        modifier = Modifier.testTag("author_input"),
+        value = author,
+        onValueChange = onAuthorChange,
+        enabled = !isPosting,
+        label = { Text("Name") }
+    )
+
+
+    OutlinedTextField(
+        modifier = Modifier.testTag("comment_input"),
+        value = text,
+        onValueChange = onTextChange,//onValueChange（中身は関数）に入る。→ViewModel→Route→再描画
+        enabled = !isPosting,
+        label = {
+            Text("Comment")
+        }
+    )
+
+    if (postErrorMessage != null) {
+        Text(
+            text = postErrorMessage,
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+
+
+    Button(
+        modifier = Modifier.testTag("post_button"),
+        onClick = {
+            onPostComment(author, text)
+        },
+        enabled =
+            author.isNotBlank() &&
+                    text.isNotBlank() &&
+                    !isPosting
     ) {
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth().testTag("author_input"),
-            value = author,
-            onValueChange = onAuthorChange,
-            enabled = !isPosting,
-            label = { Text("Name") },
-            singleLine = true,
-            colors = commentTextFieldColors()
-        )
-        OutlinedTextField(
-            modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
-                .testTag("comment_input"),
-            value = text,
-            onValueChange = onTextChange,
-            enabled = !isPosting,
-            label = { Text("Comment") },
-            maxLines = 3,
-            colors = commentTextFieldColors()
-        )
-        if (postErrorMessage != null) {
-            Text(postErrorMessage, color = Color(0xFFFF9DAB))
-        }
-        Button(
-            modifier = Modifier.align(Alignment.End).testTag("post_button"),
-            onClick = { onPostComment(author, text) },
-            enabled = author.isNotBlank() && text.isNotBlank() && !isPosting,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = PrimaryPurple,
-                contentColor = Color.White
-            )
-        ) {
-            Text("Post")
-        }
+        Text("Post")//ボタンの真ん中に書いてある。関数の最後の引数がラムダ→（）の外に出せる。
     }
 }
 
-@Composable
-private fun commentTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = PrimaryText,
-    unfocusedTextColor = PrimaryText,
-    disabledTextColor = SecondaryText,
-    focusedLabelColor = AccentPink,
-    unfocusedLabelColor = SecondaryText,
-    disabledLabelColor = SecondaryText,
-    focusedBorderColor = PrimaryPurple,
-    unfocusedBorderColor = LineColor,
-    focusedContainerColor = InputBackground,
-    unfocusedContainerColor = InputBackground,
-    disabledContainerColor = InputBackground,
-    cursorColor = AccentPink
-)
+
+
+
+
+

@@ -18,7 +18,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,7 +44,6 @@ import com.example.soccerapp.ui.PrimaryText
 import com.example.soccerapp.ui.ScreenBackground
 import com.example.soccerapp.ui.SecondaryText
 import com.example.soccerapp.ui.state.RegisterUiState
-import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
@@ -57,14 +55,6 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val state = uiState
-
-    if (state is RegisterUiState.Success) {
-        LaunchedEffect(state.email) {
-            delay(1500)
-            password = ""
-            onRegistered()
-        }
-    }
 
     Column(
         modifier = Modifier
