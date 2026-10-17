@@ -1,156 +1,129 @@
-
 package com.example.soccerapp.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import com.example.soccerapp.data.model.Match
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-
+import com.example.soccerapp.data.model.Match
 
 @Composable
 fun MatchListScreen(
     matches: List<Match>,
     onMatchClick: (Int) -> Unit
 ) {
-
     val sortedMatches = matches.sortedBy { it.utcDate }
 
     LazyColumn(
-        contentPadding = PaddingValues(
-            vertical = 8.dp
-        )
+        modifier = Modifier.fillMaxSize().background(ScreenBackground),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 14.dp)
     ) {
-        items(sortedMatches) { match ->
+        item {
+            Text(
+                "試合一覧",
+                color = PrimaryText,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 6.dp, bottom = 14.dp)
+            )
+        }
 
+        items(sortedMatches, key = { it.id }) { match ->
             val statusText = when (match.status) {
                 "IN_PLAY", "LIVE" -> "LIVE"
                 "PAUSED" -> "HALF TIME"
                 "FINISHED" -> "FT"
-                "SCHEDULED", "TIMED" -> "UPCOMING"
-                "POSTPONED" -> "POSTPONED"
+                "SCHEDULED", "TIMED" -> "予定"
+                "POSTPONED" -> "延期"
                 else -> match.status
             }
+            val dateText = if (match.utcDate.length >= 16) {
+                "${match.utcDate.substring(5, 7).toIntOrNull() ?: 0}月" +
+                    "${match.utcDate.substring(8, 10).toIntOrNull() ?: 0}日  " +
+                    match.utcDate.substring(11, 16)
+            } else {
+                match.utcDate
+            }
 
-            Column {
-
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 9.dp)
+                    .background(PanelBackground, RoundedCornerShape(13.dp))
+                    .clickable { onMatchClick(match.id) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp)
+            ) {
                 Text(
-                    text = "${match.utcDate.substring(5, 7).toInt()}月${match.utcDate.substring(8, 10).toInt()}日 ${match.utcDate.substring(11, 16)}",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    textAlign = TextAlign.Center
+                    dateText,
+                    fontSize = 11.sp,
+                    color = SecondaryText,
+                    modifier = Modifier.padding(bottom = 10.dp)
                 )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onMatchClick(match.id)
-                        }
-                        .padding(
-                            horizontal = 20.dp,
-                            vertical = 16.dp
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
                         model = match.homeTeamCrest,
                         contentDescription = null,
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(36.dp)
                     )
-
-
-
-
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = match.homeTeam,
-                            modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.End,
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-
-                        Text(
-                            text = " VS ",//weight(1f)が２つある→中央へ
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-
-                        Text(
-                            text = match.awayTeam,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
+                    Text(
+                        match.homeTeam,
+                        color = PrimaryText,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+                    )
+                    Text(
+                        text = if (match.homeScore != null && match.awayScore != null) {
+                            "${match.homeScore} - ${match.awayScore}"
+                        } else {
+                            "VS"
+                        },
+                        color = PrimaryText,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        match.awayTeam,
+                        color = PrimaryText,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+                    )
                     AsyncImage(
                         model = match.awayTeamCrest,
                         contentDescription = null,
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(36.dp)
                     )
-
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-
                     Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (match.status == "IN_PLAY" || match.status == "LIVE") {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        statusText,
+                        color = if (statusText == "LIVE") AccentPink else SecondaryText,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-
-
-                    Text(
-                        text = ">"
-                    )
+                    Text("›", color = SecondaryText, fontSize = 19.sp)
                 }
-
-                HorizontalDivider(
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
             }
         }
     }
 }
-//modifier=Composable関数自体への設定

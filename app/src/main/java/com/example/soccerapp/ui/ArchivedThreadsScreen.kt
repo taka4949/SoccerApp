@@ -1,26 +1,28 @@
 package com.example.soccerapp.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.soccerapp.ui.state.ArchivedThreadsUiState
-
 
 @Composable
 fun ArchivedThreadsScreen(
@@ -29,105 +31,68 @@ fun ArchivedThreadsScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(ScreenBackground)
             .padding(16.dp)
     ) {
-
-
-
         Text(
-            text = "過去ログ一覧",
-            style = MaterialTheme.typography.titleLarge
+            "過去ログ一覧",
+            color = PrimaryText,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 18.dp)
         )
-
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-
-
-
         when (uiState) {
-
             ArchivedThreadsUiState.Loading -> {
-
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryPurple)
                 }
             }
-
             is ArchivedThreadsUiState.Success -> {
-
                 if (uiState.threads.isEmpty()) {
-
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "過去ログはまだありません"
-                        )
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("過去ログはまだありません", color = SecondaryText)
                     }
-
                 } else {
-
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-
-                        items(
-                            items = uiState.threads,
-                            key = { thread -> thread.threadId }
-                        ) { thread ->
-
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    onThreadClick(thread.threadId)
-                                }
+                        items(uiState.threads, key = { it.threadId }) { thread ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(PanelBackground, RoundedCornerShape(14.dp))
+                                    .clickable { onThreadClick(thread.threadId) }
+                                    .padding(18.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-
                                 Text(
-                                    text = "過去ログ ${thread.number}",
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.titleMedium
+                                    "過去ログ ${thread.number}",
+                                    color = PrimaryText,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
+                                Text("›", color = AccentPink, fontSize = 24.sp)
                             }
                         }
                     }
                 }
             }
-
             is ArchivedThreadsUiState.Error -> {
-
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    Text(
-                        text = uiState.message
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Button(
-                        onClick = onRetry
-                    ) {
-                        Text("Retry")
-                    }
+                    Text(uiState.message, color = PrimaryText)
+                    Button(onClick = onRetry) { Text("再試行") }
                 }
             }
         }
     }
 }
-

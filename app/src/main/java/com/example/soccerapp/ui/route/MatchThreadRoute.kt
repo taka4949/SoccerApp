@@ -1,78 +1,68 @@
 package com.example.soccerapp.ui.route
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.soccerapp.MatchThreadViewModel
-import com.example.soccerapp.ui.CommentSection
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.soccerapp.ui.AccentPink
 import com.example.soccerapp.ui.CommentPostSection
+import com.example.soccerapp.ui.CommentSection
+import com.example.soccerapp.ui.PrimaryText
 import com.example.soccerapp.ui.state.MatchThreadUiState
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-
 
 @Composable
-fun ColumnScope.MatchThreadRoute(){//親columnのスコープ→この中でweight使える
-
+fun ColumnScope.MatchThreadRoute() {
     val viewModel: MatchThreadViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val success = uiState as? MatchThreadUiState.Success
+    val isPosting = success?.isPosting ?: false
 
-
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()//ViewModelのval uiStateから
-
-
-    val isPosting = (uiState as? MatchThreadUiState.Success)?.isPosting ?: false
-
-
-    val refreshErrorMessage =
-        (uiState as? MatchThreadUiState.Success)?.refreshErrorMessage
-
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("コメント", color = PrimaryText, fontSize = 16.sp)
+        TextButton(onClick = viewModel::loadComments, enabled = !isPosting) {
+            Text("コメントを更新", color = AccentPink, fontSize = 12.sp)
+        }
+    }
 
     CommentSection(
         uiState = uiState,
         onRetry = viewModel::loadComments,
-        modifier = Modifier.weight(1f)//columnの余分な部分を使える
+        modifier = Modifier.weight(1f)
     )
 
-
-
-    if (refreshErrorMessage != null) {
-        Text(text = refreshErrorMessage)
+    if (success?.refreshErrorMessage != null) {
+        Text(
+            success.refreshErrorMessage,
+            color = AccentPink,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
     }
-
-    Button(
-        onClick = viewModel::loadComments,
-        enabled = !isPosting
-    ) {
-        Text("Refresh")
-    }
-
 
     CommentPostSection(
-        author = (uiState as? MatchThreadUiState.Success)?.author ?: "",
-        text = (uiState as? MatchThreadUiState.Success)?.text ?: "",
+        author = success?.author ?: "",
+        text = success?.text ?: "",
         onAuthorChange = viewModel::onAuthorChange,
         onTextChange = viewModel::onTextChange,
-        postErrorMessage =
-            (uiState as? MatchThreadUiState.Success)?.postErrorMessage,
+        postErrorMessage = success?.postErrorMessage,
         isPosting = isPosting,
         onPostComment = { author, text ->
-            viewModel.postComment(
-                author = author,
-                text = text
-            )
+            viewModel.postComment(author = author, text = text)
         }
-
-
     )
 }
-
-
-//入れ子のUiStateからsuccessの中身を取得できない→確認して確定させる必要がある。
-
-
-//owner = ViewModelを誰に所属させて、いつまで保持するか→それがNaviになってる。（コメント機能）
-//Factory = ViewModelをどうやって生成するか
-//Activity内→hilt対応,BackstackEntry内→デフォルトになる。hiltViewModelと明示する必要がある！。
