@@ -1,11 +1,6 @@
 # SoccerApp
 
-## アプリをインストールせずに見る
-
-**[SoccerApp 紹介サイト — 画面・機能・技術設計を見る](https://soccerapp-showcase-taka4949.saltyrice4.chatgpt.site)**
-
-Android端末や開発環境がなくても、主要な画面の流れと実装済みの機能を確認できます。サイト内の画面は公開コードに基づく説明用の再現で、試合・コメントは架空のサンプルです（実機スクリーンショットではありません）。
-
+**[ホームページ — アプリ紹介・知識ノート](https://soccerapp-showcase-taka4949.saltyrice4.chatgpt.site)**
 
 Kotlinで個人開発している、**サッカーの試合情報と試合別のコメント掲示板を組み合わせたAndroidアプリ**です。
 
