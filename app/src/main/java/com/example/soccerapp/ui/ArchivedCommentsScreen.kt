@@ -1,6 +1,8 @@
 
 package com.example.soccerapp.ui
 
+
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,17 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.soccerapp.ui.state.ArchivedCommentsUiState
-
-
 
 @Composable
 fun ArchivedCommentsScreen(
@@ -34,79 +37,72 @@ fun ArchivedCommentsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(0xFF0D1020))
             .padding(16.dp)
     ) {
-
         Text(
             text = "過去ログ（閲覧専用）",
-            style = MaterialTheme.typography.titleLarge
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
         )
+
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
         when (uiState) {
-
             ArchivedCommentsUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color(0xFF926CD5))
                 }
             }
 
-            is ArchivedCommentsUiState.Success -> {
 
+
+            is ArchivedCommentsUiState.Success -> {
                 if (uiState.comments.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("コメントはありません")
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("コメントはありません", color = Color(0xFFBDB7CD))
                     }
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(
-                            items = uiState.comments,
-                            key = { comment -> comment.id }
-                        ) { comment ->
-
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(uiState.comments, key = { it.id }) { comment ->
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp)
+                                    .padding(vertical = 12.dp)
                             ) {
-
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement =
-                                        Arrangement.SpaceBetween
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text(
                                         text = comment.author,
-                                        style = MaterialTheme.typography.titleMedium
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
                                     )
-
                                     Text(
                                         text = comment.createdAt,
-                                        style = MaterialTheme.typography.bodySmall
+                                        color = Color(0xFFBDB7CD),
+                                        fontSize = 11.sp
                                     )
                                 }
-
                                 Text(
                                     text = comment.text,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(vertical = 10.dp)
                                 )
-
-                                HorizontalDivider()
+                                HorizontalDivider(color = Color(0xFF37344E))
                             }
                         }
                     }
                 }
             }
+
+
 
             is ArchivedCommentsUiState.Error -> {
                 Column(
@@ -114,15 +110,13 @@ fun ArchivedCommentsScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    Text(uiState.message)
-
+                    Text(text = uiState.message, color = Color.White)
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Button(
-                        onClick = onRetry
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7550B8))
                     ) {
-                        Text("Retry")
+                        Text("再試行")
                     }
                 }
             }
