@@ -1,84 +1,88 @@
 package com.example.soccerapp.ui
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.runtime.Composable
-import com.example.soccerapp.data.model.League
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import androidx.compose.foundation.layout.size
+import com.example.soccerapp.data.model.League
 
 @Composable
 fun LeagueListScreen(
     leagues: List<League>,
-    onLeagueClick : (String) -> Unit
+    onLeagueClick: (String) -> Unit
 ) {
     LazyColumn(
-        contentPadding = PaddingValues(
-            vertical = 8.dp
-        )
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0D1020)),
+        contentPadding = PaddingValues(16.dp)
     ) {
+        item {
+            Text(
+                text = "リーグ一覧",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
+
+
+
+
         items(leagues) { league ->
-            Column {//縦
-                Row(//横
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+                    .background(Color(0xFF201D3A), RoundedCornerShape(12.dp))
+                    .clickable { onLeagueClick(league.id) }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = league.emblem,
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth()//横幅いっぱい（順番大事、横幅→クリックも余白に有効→縦と横に余白）
-                        .clickable {
-                            onLeagueClick(league.id)//loadMatch()へ→Repository→試合データもってくる。
-                        }
-                        .padding(
-                            horizontal = 20.dp,
-                            vertical = 16.dp
-                        ),
-                    verticalAlignment = Alignment.CenterVertically//Row内の部品を中央へ寄せる。
-                ) {
-
-                    AsyncImage(//ロゴ
-                        model = league.emblem,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(68.dp)
-                            .padding(end = 20.dp)
-
-                    )
-
-                    Text(
-                        text = league.name,
-                        modifier = Modifier
-                            .weight(1f)//これは余白を使う。
-                            .padding(end = 12.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,//一行に収める
-                        overflow = TextOverflow.Ellipsis//長文は...に省略。
-                    )
-                    Text(
-                        text = ">"
-                    )
-                }
-
-                HorizontalDivider(//区切る線
-                    modifier = Modifier.padding(start = 20.dp),
-                    thickness = 1.dp,//線の太さ
-                    color = MaterialTheme.colorScheme.outlineVariant
+                        .size(44.dp)
+                        .background(Color(0xFFEAE8F2), RoundedCornerShape(8.dp))
+                        .padding(4.dp)
                 )
+                Text(
+                    text = league.name,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 14.dp),
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text("›", color = Color(0xFFC6B9D9), fontSize = 23.sp)
             }
         }
     }
-
 }
+
+
+
+
 
 //modifier=Composable関数自体への設定

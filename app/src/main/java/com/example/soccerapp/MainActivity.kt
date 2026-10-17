@@ -38,11 +38,11 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
 
                 var showStartupImage by rememberSaveable {
-                    mutableStateOf(true)
+                    mutableStateOf(true)//まず表示
                 }
 
                 LaunchedEffect(Unit) {
-                    delay(1500)
+                    delay(2500)
                     showStartupImage = false
                 }
 
@@ -51,8 +51,14 @@ class MainActivity : ComponentActivity() {
                 Surface(//アプリ全体の土台、設定。
                     modifier = Modifier
                         .fillMaxSize()
-                        .safeDrawingPadding()
+                        .then(
+                            if (showStartupImage) Modifier//splashの時は画面全体に表示
+                            else Modifier.safeDrawingPadding()//安全な余白を追加
+                        ),
+                    color = Color(0xFF0D1020)
                 ) {
+
+
                     if (showStartupImage) {
                         StartupImageScreen()
                     } else {
@@ -66,22 +72,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun StartupImageScreen() {
+    Image(
+        painter = painterResource(
+            id = R.drawable.splash
+        ),
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(
-                id = R.drawable.startup_art
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .aspectRatio(1f),
-            contentScale = ContentScale.Fit
-        )
-    }
+
+        contentDescription = null,
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop//画像の縦横比を維持しながら表示領域を埋める
+    )
 }

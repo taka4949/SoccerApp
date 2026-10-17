@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 
+//データストア作成元
 
 private val Context.dataStore by preferencesDataStore(
     name = "user_preferences"
@@ -19,7 +20,13 @@ class UserPreferencesRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val hasSeenPromptKey =
-        booleanPreferencesKey("has_seen_account_prompt")//Key（map)
+        booleanPreferencesKey("has_seen_account_prompt_testaa")//Key（map)
+
+
+    //("has_seen_account_prompt_testaa")
+
+    //("has_seen_account_prompt")
+
 
     val hasSeenAccountPrompt: Flow<Boolean> =
         context.dataStore.data.map { preferences ->
