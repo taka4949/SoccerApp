@@ -10,7 +10,7 @@ Kotlinで個人開発している、**サッカーの試合情報と試合別の
 
 大会・試合情報の取得とローカルキャッシュ、試合別コメントの投稿・閲覧、一定件数に達したスレッドの自動切り替えと過去ログ閲覧、メールアドレス・パスワードによるアカウント登録を実装しています。Androidアプリだけでなく、KtorによるAPIとPostgreSQLによる永続化も開発しています。
 
-> **開発状況（2026年10月17日）**：個人開発中のプロトタイプです。AndroidエミュレーターとローカルのKtorサーバーを使用する開発構成が中心で、アカウント登録は実装済みで、Ktor APIの一部を自動テストするCIも導入済みです。ログイン・ログイン状態の維持・投稿権限の制御、インターネット公開されたAPI、署名済みAPKの配布は今後の対応です。以下では実装済みと予定を分けて記載しています。
+> **開発状況（2026年10月18日）**：個人開発中のプロトタイプです。AndroidアプリとKtor API・PostgreSQLを開発し、KtorとPostgreSQLをOracle Cloud Infrastructure（OCI）のCompute VMに配置しました。CaddyでHTTPS通信を受け、Androidからインターネット経由でコメントの取得・投稿・保存まで動作を確認しています。GitHub ActionsによるKtor APIの一部の自動テストも導入済みです。一方、ログイン・認可、継続的な運用・バックアップ体制、署名済みAPKの配布は未完成です。コメント投稿は接続元IPを制限した検証用の公開状態であり、一般ユーザー向けの正式公開ではありません。以下では実装済みと予定を分けて記載しています。
 
 ## 目次
 
@@ -20,6 +20,7 @@ Kotlinで個人開発している、**サッカーの試合情報と試合別の
 - [独自の工夫と設計上の判断](#独自の工夫と設計上の判断)
 - [アーキテクチャ](#アーキテクチャ)
 - [使用技術](#使用技術)
+- [Oracle Cloudへのデプロイ](#oracle-cloudへのデプロイ)
 - [セットアップと動作環境](#セットアップと動作環境)
 - [テスト](#テスト)
 - [CI（自動テスト）](#ci自動テスト)
@@ -72,6 +73,17 @@ Kotlinで個人開発している、**サッカーの試合情報と試合別の
 - [x] 1スレッド1,000コメントを上限とした自動切り替え
 - [x] トランザクションとPostgreSQLのアドバイザリロックによる同一試合への並行投稿制御
 - [x] 投稿データの空文字・文字数・試合IDの検証
+
+### Oracle Cloud（OCI）へのデプロイ
+
+- [x] OCI ComputeにUbuntu 24.04のVM（`VM.Standard.E2.1.Micro`、1GBメモリ）を作成
+- [x] VMにJava 17・PostgreSQLを導入し、Ktor APIをビルドして配置
+- [x] `users`・`threads`・`comments`のテーブルを作成し、JDBCから接続
+- [x] `systemd`でKtorをサービス化し、自動起動を有効化
+- [x] Caddyをリバースプロキシとして導入し、HTTPSで公開
+- [x] HTTPS経由の`/health`応答、コメントAPIの取得・投稿、PostgreSQLへの保存、Androidでの表示を確認
+
+クラウド上の構成は動作検証用です。GETの一部を公開し、コメント投稿のPOSTはCaddyで指定した接続元IPに制限しています。ログイン・ユーザー単位の認可は未実装のため、一般公開用の運用構成ではありません。
 
 ### 紹介サイト・CI
 
@@ -146,12 +158,26 @@ Android
        ├─ Retrofit ──→ football-data.org
        ├─ Room (SQLite: 大会・試合キャッシュ)
        ├─ DataStore (初回案内の設定)
-       └─ Retrofit ──→ Ktor API
+       └─ Retrofit ──→ Ktor API（ローカル／OCI）
                           ↓
              CommentRepository / JdbcAuthRepository
                           ↓ JDBC
                        PostgreSQL
 ```
+
+OCI上で検証したコメント通信の構成：
+
+```text
+Android（SoccerApp）
+    ↓ Retrofit / HTTPS
+OCI Compute VM（Ubuntu 24.04）
+    ↓ Caddy（HTTPS終端・リバースプロキシ）
+    ↓ Ktor API（systemd管理、8080番で待機）
+    ↓ JDBC
+PostgreSQL（同一VM内）
+```
+
+試合情報は引き続きAndroidからfootball-data.orgへ直接アクセスします。上記のOCI構成はコメントAPIなど自作バックエンドの通信経路です。
 
 ```text
 API JSON → DTO → Repository → Domain Model → ViewModel → Compose
@@ -179,14 +205,33 @@ Room Entity → Repository → Domain Model → ViewModel → Compose
 | ローカル保存 | Room、SQLite、DataStore |
 | 依存性注入 | Hilt |
 | バックエンド | Ktor Server、JDBC、PostgreSQL |
+| クラウド・OS | Oracle Cloud Infrastructure（OCI Compute VM）、Ubuntu 24.04 |
+| HTTPS・リバースプロキシ | Caddy、TLS証明書、HTTPS |
+| サービス管理 | systemd（Ktorの自動起動・再起動設定） |
 | パスワード保存 | Argon2id |
 | CI | GitHub Actions（Ktorの一部テストを自動実行） |
 | ビルド・コード生成 | Gradle Kotlin DSL、KSP、kapt |
 | テスト | JUnit、kotlinx-coroutines-test、Ktor Server Test、AndroidX Compose UI Test |
 
+## Oracle Cloudへのデプロイ
+
+2026年10月18日、OCIのCompute VM（Ubuntu 24.04、`VM.Standard.E2.1.Micro`）上でKtor APIとPostgreSQLを稼働させました。ローカルPCとは別のサーバーでデータを保持し、AndroidからHTTPSでアクセスできることを確認しています。
+
+```text
+Android → HTTPS → Caddy（443番） → Ktor（8080番） → PostgreSQL
+```
+
+- **サーバー構築**：VMへSSHで接続し、Java 17・PostgreSQLを導入。GitHubのソースを取得してKtorの配布用ファイルをビルド・配置しました。
+- **データ保存**：PostgreSQLに`users`・`threads`・`comments`のテーブルを作成。Androidから投稿し、DBに保存されたコメントを確認しました。
+- **HTTPS**：Caddyを導入し、公開ホスト名でTLS証明書を取得。`GET /health`で`200 OK`、コメント取得で`200 OK`、コメント投稿と画面表示も確認しました。
+- **起動管理**：Ktorを`systemd`サービスに登録し、`enabled`・`active (running)`とヘルスチェック応答を確認しました。
+- **アクセス制御**：外部公開はCaddyの経路・HTTPメソッド・接続元IPで限定。OCI側もHTTP/HTTPSの受信ルールを設定し、PostgreSQLを直接外部公開する構成にはしていません。
+
+**現時点の範囲**：手動デプロイした検証環境です。GitHub Actionsからの自動デプロイ（CD）、Dockerでの本番起動、認証・認可の完成、データバックアップ・復元手順、監視・障害対応は未整備です。IP制限はアカウント認証の代わりにはなりません。実利用者への配布前にこれらを整備します。
+
 ## セットアップと動作環境
 
-現段階はローカル開発向けの構成です。**実行済みの完成品を配布しているわけではありません。**
+ローカル開発用の手順と、OCI上で動作確認した構成を区別して記載します。**一般ユーザー向けの完成品・署名済みAPKはまだ配布していません。**
 
 ### Android側
 
@@ -204,7 +249,7 @@ FOOTBALL_DATA_API_TOKEN=your_api_token
 
 ### コメント・アカウント登録用バックエンド
 
-Ktorサーバーはローカル環境のPostgreSQLに接続して起動します。
+ローカル開発ではKtorサーバーをローカル環境のPostgreSQLに接続して起動します。OCI環境では同じKtor APIをVM内のPostgreSQLへ接続して動作確認しました。
 
 - DB接続先：環境変数`SOCCER_DB_URL`（未指定時：`jdbc:postgresql://localhost:5432/soccer_app`）
 - DBユーザー：`soccer_app_user`（現状の実装で固定）
@@ -221,7 +266,7 @@ Ktorサーバーはローカル環境のPostgreSQLに接続して起動します
 
 Windowsでは`gradlew.bat :server:run`を使用します。起動後は`http://localhost:8080/health`でヘルスチェックできます。
 
-Android側のコメントAPIの接続先は現状`http://10.0.2.2:8080/`に固定されています。これはAndroidエミュレーターから開発用PCのローカルサーバーへ接続するためのアドレスで、**実機・外部ユーザー向けの公開URLではありません**。APK配布前にデプロイ先のHTTPS URLへ切り替える必要があります。
+**GitHubにあるAndroid側のコメントAPI接続先**は、現時点では`http://10.0.2.2:8080/`に固定されています。これはAndroidエミュレーターからローカルPCへ接続する開発用URLです。OCI接続の検証時にはAndroid側の`CommentNetworkModule.kt`の`baseUrl`をHTTPSのデプロイ先へ切り替えて動作確認しましたが、この接続先変更はまだリポジトリに反映していません。配布前には開発／検証／本番の接続先を切り替えられる構成へ整理します。
 
 ## テスト
 
@@ -253,7 +298,7 @@ GitHub Actionsの[Ktor CI](.github/workflows/server-ci.yml)を導入していま
 - **対象**：`ApplicationTest`（ヘルスチェック）、`CommentRoutesTest`（コメント投稿・取得、過去ログ、不正入力への応答）
 - **確認結果**：2026年10月17日の[main上の実行](https://github.com/taka4949/SoccerApp/actions/runs/39042041056)で成功を確認
 
-現時点のCIは、実際のPostgreSQLに接続しないサーバーテストが対象です。DB統合テスト、登録APIのテスト、Android側のテスト・APKビルド・配布・自動デプロイは含みません。
+現時点のCIは、実際のPostgreSQLに接続しないサーバーテストが対象です。DB統合テスト、登録APIのテスト、Android側のテスト・APKビルド・配布・自動デプロイは含みません。OCIへのデプロイも手動で実施しており、CI成功時にクラウドへ反映される仕組みはまだありません。
 
 ## 開発の進捗と今後の計画
 
@@ -272,6 +317,8 @@ GitHub Actionsの[Ktor CI](.github/workflows/server-ci.yml)を導入していま
 - [x] スコアの手動更新
 - [x] 紹介ホームページ公開・実際のスクリーンショット掲載・知識ノート
 - [x] GitHub ActionsによるKtorの一部テストの自動実行
+- [x] OCI上にKtor・PostgreSQLをデプロイし、CaddyのHTTPS経由でAndroidからコメント投稿・取得を確認
+- [x] `systemd`でKtorを自動起動する設定を導入
 
 ### 次に取り組む機能（予定）
 
@@ -279,13 +326,17 @@ GitHub Actionsの[Ktor CI](.github/workflows/server-ci.yml)を導入していま
 2. **交流機能の拡張**：いいね、画像投稿、自分のコメント履歴、コメントのコピー・検索など。コメントへの返信・引用、返信先への移動も追加する。
 3. **サッカー情報の拡張**：ニュース一覧、記事ごとのコメント機能。
 4. **UI/UX改善の継続**：整備した起動画面・ダークUIを基に、ナビゲーション、アイコン、操作性を改善する。
-5. **公開可能なバックエンド**：Dockerによる開発環境整理、AWSへのKtor・PostgreSQL配置、HTTPS対応、必要なセキュリティ対策。
+5. **クラウド運用の整備**：導入済みのOCI環境をベースに、ログイン・認可、バックアップ・復元、ログ・監視、設定・シークレット管理、デプロイ手順を整える。Dockerは環境再現性を高める手段として必要に応じて導入する。
 6. **リアルタイム性の強化**：WebSocketによるコメント更新、再接続・ライフサイクル制御。
 7. **CI拡張とAPK配布**：導入済みのKtor CIに加え、登録API・DB統合テスト・Android側の検証を拡充する。署名済みAPKの作成とGitHub Releasesでの配布も進める。
 8. **公開済みホームページの更新**：開発に合わせて画面・実装解説を更新し、知識ノートに学習内容を蓄積する。APK配布開始後は、ダウンロード先や利用手順も案内する。
 9. **正式リリース**：アプリの動作検証、公開バックエンドの整備、認証・セキュリティ対応、操作性の改善などを進め、将来的にはGoogle Playでの公開を目指す。
 10. **通報・ミュートと投稿管理**：コメントの通報、利用者によるミュート、管理者による投稿非表示を追加し、公開後の荒らしへの対応手段を用意する。
 11. **スコア予想・ポイントランキング**：ログインしたユーザーが試合前にスコアを予想し、結果に応じてポイントを獲得する。リーグ・シーズンごとの合計ポイントでランキングを表示する。
+
+### クラウド選定方針（OCIとAWS）
+
+現在のSoccerAppにとって、**AWSへの移行・追加導入は必須ではありません**。OCIでAndroid → HTTPS → Ktor → PostgreSQLの接続を確認できており、同じ構成をAWSで再構築するより、認証・運用・テストとアプリ機能の完成を優先します。AWS固有サービスを使う要件や、運用規模・コスト・可用性などの理由が生じたときに比較検討します。AWSの利用経験を別途得ることは選択肢ですが、現段階の必須タスクにはしません。
 
 #### スコア予想・ランキングの仮仕様（未実装）
 
@@ -298,7 +349,7 @@ GitHub Actionsの[Ktor CI](.github/workflows/server-ci.yml)を導入していま
 
 上記は開発の方向性を示したもので、着手順や公開時期を固定するものではありません。まずは**署名済みAPKを作成して動作確認・配布できる状態**を目指し、並行して**公開済みの紹介ホームページを更新**していく予定です。その後、アプリの品質と運用環境を整え、**Google Playでの正式リリース**も目標としています。
 
-現状のコメントAPIはローカルサーバー向けの設定です。外部配布にあたっては、公開APIへの接続、認証、APIトークンの取り扱い、HTTPS、運用上の安全性などを確認・対応する必要があります。
+コメントAPIはOCI上にHTTPSで配置し、Androidからの通信を検証済みです。ただし、GitHubのAndroidコードはローカル接続先のままで、OCI側のコメント投稿には検証用の接続元IP制限があります。外部配布にあたっては、認証・認可、APIトークンの取り扱い、接続先設定、バックアップ・運用上の安全性などを整える必要があります。
 
 ### 追加構想：試合予想・交流表現の拡張（検討段階）
 
