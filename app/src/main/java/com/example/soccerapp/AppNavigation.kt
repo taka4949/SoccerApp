@@ -19,51 +19,42 @@ import com.example.soccerapp.ui.route.ArchivedCommentsRoute
 fun AppNavigation(
     leagues: List<League>,
     matches: List<Match>,
-    onLeagueSelected: (String) -> Unit//この関数と引数で返り値は無し、というセットを下に渡す。
+    onLeagueSelected: (String) -> Unit
 ) {
-    val navController = rememberNavController()//naviはスタック、変遷の履歴を記録する。戻ることが可能へ
-
-
+    val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = "league_list"
+        startDestination = "leagues"
     ) {
-        composable(route = "league_list") {
+        composable(route = "leagues") {
             LeagueListScreen(
                 leagues = leagues,
-                onLeagueClick = { leagueId ->//これはLeagueListScreen内で起動する！
-                    onLeagueSelected(leagueId)//リーグクリック（＝マッチリスト表示）で、loadMatches(leagueId)へ。onLeagueSelected=loadMatches
-                    navController.navigate("league/$leagueId")///.navigateがバックスタックに放り込む関数！（大事）。画面名を変更する関数でもある。ここからは直接ID入手不可。｛｝だから。
-                }//ここで、クリックが下の処理へ行くトリガー。リーグIDとその画面情報を保存。
+                onLeagueClick = { leagueId ->
+                    onLeagueSelected(leagueId)
+                    navController.navigate("leagues/$leagueId/matches")
+                }
             )
         }
 
-
-
-
-        composable(route = "league/{leagueId}") { backStackEntry ->
+        composable(route = "leagues/{leagueId}/matches") { backStackEntry ->
             val leagueId = requireNotNull(
                 backStackEntry.arguments?.getString("leagueId")
             )
 
             val leagueMatches = matches.filter { match ->
-                match.leagueId == leagueId//二重チェックしている。既にapi側（ApiService)で選別済み。
+                match.leagueId == leagueId
             }
-            MatchListScreen(//リーグ内の試合リスト
+            MatchListScreen(
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
-                    navController.navigate("match/$matchId")//.navigate()は保存。試合をタップが下のトリガー。
-                }//マッチクリックしたら、navigate()にマッチIｄをいれて下の関数↓が動く。
+                    navController.navigate("matches/$matchId/menu")
+                }
             )
         }
 
-
-
-
-
         composable(
-            route = "match/{matchId}",
+            route = "matches/{matchId}/menu",
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
@@ -76,23 +67,18 @@ fun AppNavigation(
                 backStackEntry.arguments?.getInt("matchId")
             )
 
-
-
-
-
-            MatchMenuScreen(//掲示板or過去コメの選択画面
+            MatchMenuScreen(
                 onLiveClick = {
-                    navController.navigate("match/$matchId/live")
+                    navController.navigate("matches/$matchId/comments")
                 },
                 onArchivesClick = {
-                    navController.navigate("match/$matchId/archives")
+                    navController.navigate("matches/$matchId/archives")
                 }
             )
         }
 
-
         composable(
-            route = "match/{matchId}/live",
+            route = "matches/{matchId}/comments",
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
@@ -109,11 +95,8 @@ fun AppNavigation(
             )
         }
 
-
-
-
         composable(
-            route = "match/{matchId}/archives",
+            route = "matches/{matchId}/archives",
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
@@ -128,7 +111,7 @@ fun AppNavigation(
             ArchivedThreadsRoute(
                 onThreadClick = { threadId ->
                     navController.navigate(
-                        "match/$matchId/archives/$threadId"
+                        "matches/$matchId/archives/$threadId"
                     )
 
                 }
@@ -136,7 +119,7 @@ fun AppNavigation(
         }
 
         composable(
-            route = "match/{matchId}/archives/{threadId}",
+            route = "matches/{matchId}/archives/{threadId}",
             arguments = listOf(
                 navArgument("matchId") {
                     type = NavType.IntType
@@ -152,36 +135,3 @@ fun AppNavigation(
 
     }
 }
-//threadID
-//Cardをタップ(スレッド一覧から）
-//    ↓
-//onThreadClick(15L)
-//    ↓
-//navController.navigate("match/123/archives/15")
-//    ↓
-//Navigationが登録されたcomposableを探す
-//    ↓
-//composable("match/{matchId}/archives/{threadId}") に一致
-//    ↓
-//ArchivedCommentsRoute() が実行される
-//    ↓
-//hiltViewModel<ArchivedCommentsViewModel>()
-//    ↓
-//SavedStateHandleから
-//matchId = 123
-//threadId = 15L を取得
-//    ↓
-//init → loadArchivedComments()
-//    ↓
-//repository.getArchivedComments(123, 15L)
-//    ↓
-//Retrofit → Ktor → PostgreSQL
-//    ↓
-//コメント一覧が返る
-//    ↓
-//_uiState.value = Success(comments)
-//    ↓
-//ArchivedCommentsScreenが再コンポーズ
-//    ↓
-//過去ログ15のコメントが画面に表示される
-
