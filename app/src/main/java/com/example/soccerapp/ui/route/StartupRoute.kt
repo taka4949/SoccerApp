@@ -1,12 +1,23 @@
 
 package com.example.soccerapp.ui.route
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -16,31 +27,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.soccerapp.StartupViewModel
-import com.example.soccerapp.ui.HomeScreen
-import com.example.soccerapp.ui.screen.RegisterScreen
-import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.soccerapp.StartupViewModel
+import com.example.soccerapp.ui.HomeScreen
+import com.example.soccerapp.ui.screen.RegisterScreen
+import com.example.soccerapp.ui.state.SessionUiState
 
 @Composable
 fun StartupRoute(
-    viewModel: StartupViewModel = hiltViewModel()
+    viewModel: StartupViewModel = hiltViewModel()//アカウント登録案内
 ) {
 
     val showPrompt by
@@ -53,6 +55,9 @@ fun StartupRoute(
     var showBoardScreen by rememberSaveable {
         mutableStateOf(false)
     }
+
+    val sessionUiState by
+    viewModel.sessionUiState.collectAsStateWithLifecycle()
 
     when {
 
@@ -76,9 +81,11 @@ fun StartupRoute(
                 onRegistered = {
                     showRegisterScreen = false//登録後に、この画面を非表示
                     viewModel.dismissAccountPrompt()//登録後に、登録案内画面を永続的に非表示
+                    viewModel.refreshSession()//ログイン状態へ更新
                 }
             )
         }
+
 
         //初回のアカウント登録案内画面
         showPrompt == true && !showRegisterScreen -> {
@@ -89,7 +96,6 @@ fun StartupRoute(
                 onSkip = viewModel::dismissAccountPrompt//登録案内を非表示
             )
         }
-
 
 
         //掲示板画面
@@ -114,17 +120,30 @@ fun StartupRoute(
         }
 
 
-
         //ホーム選択画面（掲示板、ニュース、ランキング、アカウント登録画面）アカウント登録、スキップ後に表示。
         showPrompt == false && !showBoardScreen -> {
-            HomeScreen(
-                onBoardClick = {//掲示板へ（true)
-                    showBoardScreen = true
-                },
-                onAccountClick = {//アカウント登録
-                    showRegisterScreen = true
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                SessionStatusBar(
+                    state = sessionUiState,
+                    onRetry = viewModel::refreshSession
+                )
+
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    HomeScreen(
+                        onBoardClick = {
+                            showBoardScreen = true
+                        },
+                        onAccountClick = {
+                            showRegisterScreen = true
+                        },
+                        isLoggedIn = sessionUiState is SessionUiState.LoggedIn
+                    )
                 }
-            )
+            }
         }
     }
 }
@@ -136,7 +155,6 @@ private fun AccountPromptScreen(
     onSkip: () -> Unit
 ) {
 
-
     var showConfirmation by rememberSaveable {
         mutableStateOf(false)
     }
@@ -144,7 +162,6 @@ private fun AccountPromptScreen(
     val primaryColor = Color(0xFF7352B5)
     val secondaryColor = Color(0xFF27203D)
     val textColor = Color(0xFFB9B1CD)
-
 
 
     Box(
@@ -161,7 +178,6 @@ private fun AccountPromptScreen(
             .padding(horizontal = 24.dp),//左右に余白
         contentAlignment = Alignment.Center
     ) {
-
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -204,9 +220,6 @@ private fun AccountPromptScreen(
             Spacer(Modifier.height(12.dp))
 
 
-
-
-
             OutlinedButton(//控えめな操作
                 onClick = {
                     showConfirmation = true
@@ -224,12 +237,10 @@ private fun AccountPromptScreen(
                     contentColor = Color.White
                 )
             ) {
-
                 Text("スキップして始める")//ダイアログを表示へ
             }
         }
     }
-
 
 
     if (showConfirmation) {
@@ -253,10 +264,6 @@ private fun AccountPromptScreen(
                     Text("はい")
                 }
             },
-
-
-
-
             dismissButton = {
                 TextButton(
                     onClick = {
@@ -274,4 +281,43 @@ private fun AccountPromptScreen(
 }
 
 
+@Composable
+private fun SessionStatusBar(
+    state: SessionUiState,
+    onRetry: () -> Unit
+) {
+    val message = when (state) {
+        SessionUiState.Loading ->
+            "ログイン状態を確認中"
 
+        is SessionUiState.LoggedIn ->
+            "ログイン中"
+
+        SessionUiState.LoggedOut ->
+            "未ログイン"
+
+        SessionUiState.Unavailable ->
+            "認証状態を確認できません"
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF27203D))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = message,
+            color = Color.White,
+            fontSize = 13.sp,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (state == SessionUiState.Unavailable) {
+            TextButton(onClick = onRetry) {
+                Text("再試行")
+            }
+        }
+    }
+}

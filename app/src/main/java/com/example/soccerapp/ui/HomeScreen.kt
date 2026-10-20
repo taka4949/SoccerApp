@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun HomeScreen(
     onBoardClick: () -> Unit,
-    onAccountClick: () -> Unit
+    onAccountClick: () -> Unit,
+    isLoggedIn: Boolean = false
 ) {
 
     val background = Color(0xFF0D1020)
@@ -68,8 +69,16 @@ verticalArrangement = Arrangement.spacedBy(12.dp)
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-        TextButton(onClick = onAccountClick) {
-            Text("アカウント登録", color = accentColor)
+
+
+
+        if (!isLoggedIn) {
+            TextButton(onClick = onAccountClick) {
+                Text(
+                    text = "アカウント登録",
+                    color = accentColor
+                )
+            }
         }
     }
 

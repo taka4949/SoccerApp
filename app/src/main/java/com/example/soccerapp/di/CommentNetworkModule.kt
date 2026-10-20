@@ -38,7 +38,7 @@ object CommentNetworkModule {
             ignoreUnknownKeys = true
         }
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")//ローカルホスト（Ktorがここで動いている）
+            .baseUrl("http://10.0.2.2:8080/")//cloud
             .client(okHttpClient)
             .addConverterFactory(
                 json.asConverterFactory(
