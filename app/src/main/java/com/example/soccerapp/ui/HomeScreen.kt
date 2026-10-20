@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.sp
 fun HomeScreen(
     onBoardClick: () -> Unit,
     onAccountClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     isLoggedIn: Boolean = false
 ) {
 
@@ -78,6 +80,13 @@ verticalArrangement = Arrangement.spacedBy(12.dp)
                     text = "アカウント登録",
                     color = accentColor
                 )
+            }
+            TextButton(onClick = onLoginClick) {
+                Text("ログイン", color = accentColor)
+            }
+        } else {
+            TextButton(onClick = onLogoutClick) {
+                Text("ログアウト", color = accentColor)
             }
         }
     }

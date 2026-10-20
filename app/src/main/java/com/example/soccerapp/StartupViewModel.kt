@@ -88,6 +88,20 @@ class StartupViewModel @Inject constructor(
         }
     }
 
+    fun logout() {
+        sessionCheckJob?.cancel()
+        viewModelScope.launch {
+            _sessionUiState.value = SessionUiState.Loading
+            try {
+                authRepository.logout()
+                _sessionUiState.value = SessionUiState.LoggedOut
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _sessionUiState.value = SessionUiState.Unavailable
+            }
+        }
+    }
 }
 
 //RouteでViewModel生成

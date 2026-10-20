@@ -3,6 +3,7 @@ package com.example.soccerapp.data.repository
 
 import com.example.soccerapp.data.remote.api.AuthApiService
 import com.example.soccerapp.data.remote.dto.RegisterRequestDto
+import com.example.soccerapp.data.remote.dto.LoginRequestDto
 import java.io.IOException
 import javax.inject.Inject
 
@@ -23,6 +24,11 @@ sealed interface RegistrationResult {
     object InvalidInput : RegistrationResult
 
     object EmailAlreadyRegistered : RegistrationResult
+}
+
+sealed interface LoginResult {
+    data class Success(val userId: Long) : LoginResult
+    data object InvalidCredentials : LoginResult
 }
 
 sealed interface SessionVerificationResult {//認証確認の結果を表す
@@ -86,6 +92,41 @@ class NetworkAuthRepository @Inject constructor(
             else -> throw IOException(
                 "Registration failed: HTTP ${response.code()}"
             )
+        }
+    }
+
+    //ログイン成功時は登録時と同じTokenRepositoryを利用する
+    suspend fun login(email: String, password: String): LoginResult {
+        val response = authApiService.login(
+            LoginRequestDto(email = email, password = password)
+        )
+        return when (response.code()) {
+            200 -> {
+                val session = response.body()
+                    ?: throw IllegalStateException("Login response body is missing")
+                tokenRepository.saveToken(session.accessToken)
+                LoginResult.Success(session.userId)
+            }
+
+            400, 401 -> LoginResult.InvalidCredentials
+
+            else -> throw IOException(
+                "Login failed: HTTP ${response.code()}"
+            )
+        }
+    }
+
+    //サーバーのセッションを無効化し、端末の保存情報を削除する
+    suspend fun logout() {
+        val token = tokenRepository.getToken()
+        try {
+            if (token != null) {
+                authApiService.logout("Bearer $token")
+            }
+        } catch (_: IOException) {
+            //通信できない場合でも端末側のログイン状態は解除する
+        } finally {
+            tokenRepository.clearToken()
         }
     }
 
