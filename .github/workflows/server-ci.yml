@@ -31,4 +31,5 @@ jobs:
         run: |
           bash ./gradlew :server:test \
             --tests "com.example.soccerapp.server.ApplicationTest" \
-            --tests "com.example.soccerapp.server.CommentRoutesTest"
+            --tests "com.example.soccerapp.server.CommentRoutesTest" \
+            --tests "com.example.soccerapp.server.SessionRoutesTest"
