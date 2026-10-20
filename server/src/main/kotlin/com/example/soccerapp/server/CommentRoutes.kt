@@ -13,6 +13,7 @@ import io.ktor.server.routing.route
 
 fun Route.commentRoutes(//HTTP通信
     commentRepository: CommentRepository,
+    sessionService: SessionService? = null,
 ) {
 
 
@@ -74,6 +75,16 @@ fun Route.commentRoutes(//HTTP通信
 
 
         post {//コメント投稿の1件返す用
+            if (sessionService != null) {
+                val userId = sessionService.resolve(extractBearerToken(call.request.headers["Authorization"]))
+                if (userId == null) {
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("message" to "Authentication required")
+                    )
+                    return@post
+                }
+            }
             val matchId = call.parameters["matchId"]?.toIntOrNull()
 
             if (matchId == null) {
