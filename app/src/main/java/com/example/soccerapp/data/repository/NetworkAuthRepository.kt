@@ -25,12 +25,23 @@ sealed interface RegistrationResult {
     object EmailAlreadyRegistered : RegistrationResult
 }
 
+sealed interface SessionVerificationResult {//認証確認の結果を表す
+    data class LoggedIn(
+        val userId: Long
+    ) : SessionVerificationResult
+
+    data object LoggedOut : SessionVerificationResult
+
+    data object Unavailable : SessionVerificationResult
+}
+
 
 
 
 
 class NetworkAuthRepository @Inject constructor(
-    private val authApiService: AuthApiService
+    private val authApiService: AuthApiService,
+    private val tokenRepository: TokenRepository
 ) {
 
     suspend fun register(//引数受け取って、APIから送る
@@ -56,6 +67,10 @@ class NetworkAuthRepository @Inject constructor(
                     ?: throw IllegalStateException(
                         "Registration response body is missing"
                     )
+
+                tokenRepository.saveToken(user.accessToken)//トークンを暗号化→保存
+
+
                 RegistrationResult.Success(
                     id = user.id,
                     email = user.email
@@ -73,5 +88,53 @@ class NetworkAuthRepository @Inject constructor(
             )
         }
     }
+
+    suspend fun verifySession(): SessionVerificationResult {
+        val token = tokenRepository.getToken()
+            ?: return SessionVerificationResult.LoggedOut
+
+        return try {
+            val response = authApiService.getCurrentUser(
+                "Bearer $token"
+            )
+
+            when (response.code()) {
+                200 -> {
+                    val user = response.body()
+                    if (user != null) {
+                        SessionVerificationResult.LoggedIn(user.userId)
+                    } else {
+                        SessionVerificationResult.Unavailable
+                    }
+                }
+
+                401 -> {
+                    tokenRepository.clearToken()
+                    SessionVerificationResult.LoggedOut
+                }
+
+                else -> SessionVerificationResult.Unavailable
+            }
+        } catch (e: IOException) {
+            SessionVerificationResult.Unavailable
+        }
+    }
 }
 
+//SoccerAppを起動
+//      ↓
+//TokenRepository.getToken()
+//      ↓
+//保存済みトークンがある？
+//      │
+//      ├─ ない → 未ログイン
+//      │
+//      └─ ある
+//           ↓
+//       GET /auth/me
+//           ↓
+//       Ktorがトークンを検証
+//           │
+//           ├─ 200 → ログイン済み
+//           ├─ 401 → 未ログイン
+//           └─ 通信失敗 → 確認できない
