@@ -2,6 +2,8 @@
 package com.example.soccerapp.data.remote.api
 
 import com.example.soccerapp.data.remote.dto.CurrentUserDto
+import com.example.soccerapp.data.remote.dto.LoginRequestDto
+import com.example.soccerapp.data.remote.dto.LoginResponseDto
 import com.example.soccerapp.data.remote.dto.RegisterRequestDto
 import com.example.soccerapp.data.remote.dto.RegisterResponseDto
 import retrofit2.Response
@@ -19,6 +21,16 @@ interface AuthApiService {
 
 
 
+
+    @POST("auth/login")
+    suspend fun login(
+        @Body request: LoginRequestDto
+    ): Response<LoginResponseDto>
+
+    @POST("auth/logout")
+    suspend fun logout(
+        @Header("Authorization") authorization: String
+    ): Response<Void>
 
     @GET("auth/me")
     suspend fun getCurrentUser(

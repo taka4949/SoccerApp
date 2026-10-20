@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.soccerapp.StartupViewModel
 import com.example.soccerapp.ui.HomeScreen
 import com.example.soccerapp.ui.screen.RegisterScreen
+import com.example.soccerapp.ui.screen.LoginScreen
 import com.example.soccerapp.ui.state.SessionUiState
 
 @Composable
@@ -49,6 +50,10 @@ fun StartupRoute(
     viewModel.showAccountPrompt.collectAsStateWithLifecycle()
 
     var showRegisterScreen by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var showLoginScreen by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -87,11 +92,28 @@ fun StartupRoute(
         }
 
 
+        //既存のアカウントでログインする画面
+        showLoginScreen -> {
+            LoginScreen(
+                onBack = {
+                    showLoginScreen = false
+                },
+                onLoggedIn = {
+                    showLoginScreen = false
+                    viewModel.dismissAccountPrompt()
+                    viewModel.refreshSession()
+                }
+            )
+        }
+
         //初回のアカウント登録案内画面
         showPrompt == true && !showRegisterScreen -> {
             AccountPromptScreen(
                 onRegister = {
                     showRegisterScreen = true
+                },
+                onLogin = {
+                    showLoginScreen = true
                 },
                 onSkip = viewModel::dismissAccountPrompt//登録案内を非表示
             )
@@ -140,6 +162,10 @@ fun StartupRoute(
                         onAccountClick = {
                             showRegisterScreen = true
                         },
+                        onLoginClick = {
+                            showLoginScreen = true
+                        },
+                        onLogoutClick = viewModel::logout,
                         isLoggedIn = sessionUiState is SessionUiState.LoggedIn
                     )
                 }
@@ -152,6 +178,7 @@ fun StartupRoute(
 @Composable
 private fun AccountPromptScreen(
     onRegister: () -> Unit,
+    onLogin: () -> Unit,
     onSkip: () -> Unit
 ) {
 
@@ -215,6 +242,12 @@ private fun AccountPromptScreen(
                 )
             ) {
                 Text("新規登録")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            TextButton(onClick = onLogin) {
+                Text("すでにアカウントをお持ちの方はこちら", color = Color.White)
             }
 
             Spacer(Modifier.height(12.dp))
