@@ -19,7 +19,8 @@ private val emailPattern =
 
 
 fun Route.authRoutes(//HTTP通信
-    authRepository: JdbcAuthRepository
+    authRepository: AuthRepository,
+    sessionService: SessionService? = null
 ) {
     post("/auth/register") {
 
@@ -70,10 +71,20 @@ fun Route.authRoutes(//HTTP通信
         try {
             val result = authRepository.register(request)
 
-            call.respond(//Androidへ返す(メアド＋ID）
-                HttpStatusCode.Created,
-                result
-            )
+            if (sessionService == null) {
+                call.respond(HttpStatusCode.Created, result)
+            } else {
+                val session = sessionService.issueForUser(result.id)
+                call.respond(
+                    HttpStatusCode.Created,
+                    RegisterSessionResponse(
+                        id = result.id,
+                        email = result.email,
+                        accessToken = session.accessToken,
+                        expiresAt = session.expiresAt
+                    )
+                )
+            }
 
         } catch (e: EmailAlreadyRegisteredException) {
             call.respond(

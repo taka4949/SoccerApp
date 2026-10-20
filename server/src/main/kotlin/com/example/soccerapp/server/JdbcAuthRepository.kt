@@ -12,9 +12,13 @@ class EmailAlreadyRegisteredException(//エラー内容を個別に用意
     cause: Throwable
 ) : RuntimeException("Email already registered", cause)//classだから継承
 
-class JdbcAuthRepository {//DB操作
+interface AuthRepository {
+    suspend fun register(request: RegisterRequest): RegisterResponse
+}
 
-    suspend fun register(
+class JdbcAuthRepository : AuthRepository {//DB操作
+
+    override suspend fun register(
         request: RegisterRequest
     ): RegisterResponse = withContext(Dispatchers.IO) {
 

@@ -25,13 +25,15 @@ fun main() {
         host = "0.0.0.0",//このpc上で動いているサーバー。このpcが接続先。どの通信入り口でも可能＝0000
         port = 8080,//ktorの受付番号
         module = {
-            module(commentRepository)
+            module(commentRepository, JdbcSessionService())
         },//関数を渡す
     ).start(wait = true)//サーバー起動後、終了までmainは終了しない。
 }
 
 fun Application.module(
     commentRepository: CommentRepository = CommentStoreTest(),//テストではStore()利用
+    sessionService: SessionService? = null,
+    authRepository: AuthRepository = JdbcAuthRepository(),
 ) {
     install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定
         json()
@@ -50,7 +52,8 @@ fun Application.module(
 
 
         commentRoutes(commentRepository)//本番
-        authRoutes(JdbcAuthRepository())
+        authRoutes(authRepository, sessionService)
+        if (sessionService != null) sessionRoutes(sessionService)
     }
 
 }
