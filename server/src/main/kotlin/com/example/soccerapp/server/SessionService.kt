@@ -14,6 +14,7 @@ import java.util.Locale
 
 interface SessionService {
     suspend fun login(email: String, password: String): SessionResponse?
+    suspend fun issueForUser(userId: Long): SessionResponse
     suspend fun resolve(token: String?): Long?
     suspend fun logout(token: String?)
 }
@@ -52,7 +53,13 @@ class JdbcSessionService : SessionService {
             argon2.wipeArray(passwordChars)
         }
         if (!valid) return@withContext null
+        createSession(row.first)
+    }
 
+    override suspend fun issueForUser(userId: Long): SessionResponse =
+        withContext(Dispatchers.IO) { createSession(userId) }
+
+    private fun createSession(userId: Long): SessionResponse {
         val bytes = ByteArray(32)
         random.nextBytes(bytes)
         val token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
@@ -63,12 +70,12 @@ class JdbcSessionService : SessionService {
                 "INSERT INTO user_sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)"
             ).use { statement ->
                 statement.setString(1, digestToken(token))
-                statement.setLong(2, row.first)
+                statement.setLong(2, userId)
                 statement.setTimestamp(3, Timestamp.from(expiry))
                 statement.executeUpdate()
             }
         }
-        SessionResponse(accessToken = token, expiresAt = expiry.toString(), userId = row.first)
+        return SessionResponse(accessToken = token, expiresAt = expiry.toString(), userId = userId)
     }
 
     override suspend fun resolve(token: String?): Long? = withContext(Dispatchers.IO) {

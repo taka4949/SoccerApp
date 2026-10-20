@@ -15,6 +15,8 @@ import kotlin.test.assertNull
 class SessionRoutesTest {
     private val token = "a".repeat(43)
     private class FakeSessions : SessionService {
+        override suspend fun issueForUser(userId: Long): SessionResponse =
+            SessionResponse("a".repeat(43), "2027-01-01T00:00:00Z", userId)
         override suspend fun login(email: String, password: String): SessionResponse? =
             if (email == "demo@example.com" && password == "correct-password")
                 SessionResponse("a".repeat(43), "2027-01-01T00:00:00Z", 11) else null

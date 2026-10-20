@@ -13,3 +13,11 @@ data class RegisterResponse(//KtorからAndroidへ返すデータ
     val id: Long,
     val email: String
 )
+
+@Serializable
+data class RegisterSessionResponse(
+    val id: Long,
+    val email: String,
+    val accessToken: String,
+    val expiresAt: String
+)
