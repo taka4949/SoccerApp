@@ -14,6 +14,8 @@ import com.example.soccerapp.ui.route.MatchDetailRoute
 import com.example.soccerapp.ui.MatchMenuScreen
 import com.example.soccerapp.ui.route.ArchivedThreadsRoute
 import com.example.soccerapp.ui.route.ArchivedCommentsRoute
+import com.example.soccerapp.ui.PredictionScreen
+
 
 @Composable
 fun AppNavigation(
@@ -30,8 +32,8 @@ fun AppNavigation(
         composable(route = "leagues") {
             LeagueListScreen(
                 leagues = leagues,
-                onLeagueClick = { leagueId ->
-                    onLeagueSelected(leagueId)
+                onLeagueClick = { leagueId ->//これはLeagueListScreen内で起動する！
+                    onLeagueSelected(leagueId)//リーグクリックでloadMatches(leagueId)へ
                     navController.navigate("leagues/$leagueId/matches")
                 }
             )
@@ -48,7 +50,7 @@ fun AppNavigation(
             MatchListScreen(
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
-                    navController.navigate("matches/$matchId/menu")
+                    navController.navigate("matches/$matchId/menu")//遷移
                 }
             )
         }
@@ -67,15 +69,37 @@ fun AppNavigation(
                 backStackEntry.arguments?.getInt("matchId")
             )
 
-            MatchMenuScreen(
+            MatchMenuScreen(//メニュー画面表示
                 onLiveClick = {
                     navController.navigate("matches/$matchId/comments")
                 },
                 onArchivesClick = {
                     navController.navigate("matches/$matchId/archives")
+                },
+                onPredictionClick = {
+                    navController.navigate("matches/$matchId/predictions")
                 }
             )
         }
+
+
+
+        composable(
+            route = "matches/{matchId}/predictions",
+            arguments = listOf(
+                navArgument("matchId") {
+                    type = NavType.IntType
+                }
+            )
+        ) {
+            PredictionScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+
 
         composable(
             route = "matches/{matchId}/comments",
@@ -90,7 +114,7 @@ fun AppNavigation(
                 backStackEntry.arguments?.getInt("matchId")
             )
 
-            MatchDetailRoute(
+            MatchDetailRoute(//試合詳細画面へ。
                 matchId = matchId
             )
         }
@@ -117,6 +141,9 @@ fun AppNavigation(
                 }
             )
         }
+
+
+
 
         composable(
             route = "matches/{matchId}/archives/{threadId}",

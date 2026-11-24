@@ -34,6 +34,7 @@ fun Application.module(
     commentRepository: CommentRepository = CommentStoreTest(),//テストではStore()利用
     sessionService: SessionService? = null,
     authRepository: AuthRepository = JdbcAuthRepository(),
+    predictionRepository: PredictionRepository = JdbcPredictionRepository()
 ) {
     install(ContentNegotiation) {//KtorのHTTP通信でJSON変換機能を使用するための設定
         json()
@@ -53,7 +54,10 @@ fun Application.module(
 
         commentRoutes(commentRepository)//本番
         authRoutes(authRepository, sessionService)
-        if (sessionService != null) sessionRoutes(sessionService)
+        if (sessionService != null) {
+            sessionRoutes(sessionService)
+            predictionRoutes(predictionRepository, sessionService)
+        }
     }
 
 }

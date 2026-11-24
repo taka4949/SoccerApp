@@ -128,7 +128,11 @@ fun MatchThreadScreen(
         }
 
         HorizontalDivider(color = Color(0xFF38364D))
-        MatchThreadRoute()
+
+
+
+
+        MatchThreadRoute()//ここでコメント取得が始まる。試合詳細のあと！
     }
 }
 

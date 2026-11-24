@@ -45,9 +45,9 @@ class MainViewModel @Inject constructor(
     fun loadData() {
          viewModelScope.launch {//scope＝寿命が必要な理由は、無駄な更新の負担を無くすため。launchがコルーチンの状態を管理している。
             _uiState.value =
-                MainUiState.Loading//初期状態のため。
+                MainUiState.Loading
 
-            try {//はLoadingが画面に描かれるまで待たない！。
+                try {
                 val leagues =
                     repository.getLeagues()
 
@@ -82,8 +82,11 @@ class MainViewModel @Inject constructor(
 
         loadMatchesJob?.cancel()//リーグが違うなら以前のコルーチンをキャンセル
 
-        loadingCompetitionCode = competitionCode
 
+
+
+
+        loadingCompetitionCode = competitionCode
 
 
         if (observedCompetitionCode != competitionCode) {//二度タップしたらコルーチンキャンセル、別リーグなら以前のコルーチンを止める。
@@ -91,7 +94,7 @@ class MainViewModel @Inject constructor(
 
             observedCompetitionCode = competitionCode
 
-            observeMatchesJob = viewModelScope.launch {//リーグ選択時に1回関数動く。Flow作る。
+            observeMatchesJob = viewModelScope.launch {//リーグ選択時に1回関数動く。Flow作る。→監視。初回は空リスト返す。
                 repository.observeMatches(competitionCode)//collectがroom内のテーブル変更を感知
                     .collect { matches ->
 

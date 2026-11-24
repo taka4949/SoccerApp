@@ -11,6 +11,13 @@ import com.example.soccerapp.ui.CommentPostSection
 import junit.framework.TestCase.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+
+
+
 
 class CommentPostSectionTest {
 
@@ -20,12 +27,12 @@ class CommentPostSectionTest {
     @Test
     fun commentPostSection_displaysInputValues() {
 
-        var inputText = ""
+        var inputText by mutableStateOf("")
 
         composeTestRule.setContent {
             CommentPostSection(
                 author = "TABATA",
-                text = "Second",
+                text = inputText,
                 onAuthorChange = {},
                 onTextChange = {
                     inputText = it

@@ -128,7 +128,6 @@ class MatchThreadViewModel @Inject constructor(
             val displayedThreadId =
                 currentState.comments.firstOrNull()?.threadId//いま表示されているスレッドID
 
-
             if (currentState.isPosting) {
                 return@launch
             }
@@ -151,12 +150,13 @@ class MatchThreadViewModel @Inject constructor(
 
 
                 val nextComments =
-                    if (
+
+                    if (//コメント投稿後にスレッドが切り替わったかを確認
                         displayedThreadId != null &&
                         displayedThreadId != comment.threadId
                     ) {
                         try {
-                            repository.getComments(matchId)
+                            repository.getComments(matchId)//新規スレッドを表示
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -164,10 +164,8 @@ class MatchThreadViewModel @Inject constructor(
                             currentState.comments
                         }
                     } else {
-                        currentState.comments + comment//何も問題ない場合、そのまま表示
+                        currentState.comments + comment//旧スレッドをそのまま表示
                     }
-
-
 
 
 

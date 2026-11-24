@@ -31,11 +31,11 @@ class UserPreferencesRepository @Inject constructor(
     val hasSeenAccountPrompt: Flow<Boolean> =
         context.dataStore.data.map { preferences ->
             preferences[hasSeenPromptKey] ?: false//保存された値を読み取り、変更されたとき新しい値受け取る
-        }
+        }//最初はfalseのまま渡す。hilt先のViewModelへ。
 
     suspend fun markPromptAsSeen() {//これ呼ばれたらスキップ
         context.dataStore.edit { preferences ->
-            preferences[hasSeenPromptKey] = true//値を保存
+            preferences[hasSeenPromptKey] = true//値を保存→ViewModel側ではfalseになる。
         }
     }
 }
