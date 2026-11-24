@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
 
 
                     if (showStartupImage) {
-                        StartupImageScreen()
+                        StartupImageScreen()//ロード画面
                     } else {
                         StartupRoute()
                     }
@@ -69,7 +69,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
 private fun StartupImageScreen() {
     Image(

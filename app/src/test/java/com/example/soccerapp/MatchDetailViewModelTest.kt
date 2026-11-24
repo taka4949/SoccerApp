@@ -1,11 +1,13 @@
-package com.example.soccerapp
 
+package com.example.soccerapp
 
 import com.example.soccerapp.data.model.League
 import com.example.soccerapp.data.model.Match
 import com.example.soccerapp.data.repository.SoccerRepository
 import com.example.soccerapp.ui.state.MatchDetailUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -13,20 +15,13 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-
 class MatchDetailViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-
-
-
-
-
     @Test
-    fun  loadMatch_success() = runTest{
-
+    fun loadMatch_success() = runTest {
 
         val repository = FakeSoccerRepository()
 
@@ -38,10 +33,9 @@ class MatchDetailViewModelTest {
 
         val state = viewModel.uiState.value as MatchDetailUiState.Success
 
-        assertEquals(1,state.match.id)
-        assertEquals("Home",state.match.homeTeam)
+        assertEquals(1, state.match.id)
+        assertEquals("Home", state.match.homeTeam)
     }
-
 
     @Test
     fun loadMatch_notFound() = runTest {
@@ -63,7 +57,6 @@ class MatchDetailViewModelTest {
             viewModel.uiState.value
         )
     }
-
 
     @Test
     fun loadMatch_failure() = runTest {
@@ -89,14 +82,12 @@ class MatchDetailViewModelTest {
         )
     }
 
-
-
     private class FakeSoccerRepository(
         private val shouldReturnNull: Boolean = false,
         private val shouldFail: Boolean = false
-    ): SoccerRepository{
+    ) : SoccerRepository {
 
-        override suspend fun  getLeagues(): List<League> {
+        override suspend fun getLeagues(): List<League> {
             return emptyList()
         }
 
@@ -110,18 +101,13 @@ class MatchDetailViewModelTest {
             matchId: Int
         ): Match? {
 
-
-
-
             if (shouldFail) {
                 throw Exception("Load failed")
             }
 
-
             if (shouldReturnNull) {
                 return null
             }
-
 
             return Match(
                 id = matchId,
@@ -137,10 +123,20 @@ class MatchDetailViewModelTest {
             )
         }
 
-
         override suspend fun getCachedLeagues(): List<League> {
             return emptyList()
         }
-    }
 
+        override suspend fun refreshMatchById(
+            matchId: Int
+        ): Match {
+            error("Not used in this test")
+        }
+
+        override fun observeMatches(
+            competitionCode: String
+        ): Flow<List<Match>> {
+            return emptyFlow()
+        }
+    }
 }

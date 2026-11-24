@@ -12,6 +12,9 @@ import org.junit.Rule
 import org.junit.Test
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runCurrent
+import com.example.soccerapp.data.model.ArchivedThread
+
+
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -395,5 +398,19 @@ private class FakeCommentRepository(
 
         return comment
 
+    }
+
+
+    override suspend fun getArchivedThreads(
+        matchId: Int
+    ): List<ArchivedThread> {
+        return emptyList()
+    }
+
+    override suspend fun getArchivedComments(
+        matchId: Int,
+        threadId: Long
+    ): List<Comment> {
+        return emptyList()
     }
 }

@@ -74,7 +74,7 @@ verticalArrangement = Arrangement.spacedBy(12.dp)
 
 
 
-        if (!isLoggedIn) {
+        if (!isLoggedIn) {//初期false
             TextButton(onClick = onAccountClick) {
                 Text(
                     text = "アカウント登録",
