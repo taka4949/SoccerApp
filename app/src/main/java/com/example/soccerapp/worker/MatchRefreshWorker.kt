@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.soccerapp.data.local.dao.FavoriteMatchDao
 import com.example.soccerapp.data.local.dao.MatchDao
 import com.example.soccerapp.data.repository.SoccerRepository
 import dagger.assisted.Assisted
@@ -26,7 +27,7 @@ import java.util.TimeZone
 class MatchRefreshWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val matchDao: MatchDao,
+    private val favoriteMatchDao: FavoriteMatchDao,
     private val repository: SoccerRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
@@ -40,7 +41,7 @@ class MatchRefreshWorker @AssistedInject constructor(
             }.format(Date())
 
 
-            val nextMatch = matchDao.getNextMatch(nowUtc)
+            val nextMatch = favoriteMatchDao.getNextFavoriteMatch(nowUtc)
                 ?: return Result.success()
 
 

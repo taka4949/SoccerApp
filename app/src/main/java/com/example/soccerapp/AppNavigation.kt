@@ -21,7 +21,9 @@ import com.example.soccerapp.ui.PredictionScreen
 fun AppNavigation(
     leagues: List<League>,
     matches: List<Match>,
-    onLeagueSelected: (String) -> Unit
+    onLeagueSelected: (String) -> Unit,
+    favoriteMatchIds: Set<Int>,
+    onFavoriteChange: (Int, Boolean) -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -51,7 +53,9 @@ fun AppNavigation(
                 matches = leagueMatches,
                 onMatchClick = { matchId ->
                     navController.navigate("matches/$matchId/menu")//遷移
-                }
+                },
+                favoriteMatchIds = favoriteMatchIds,
+                onFavoriteChange = onFavoriteChange,
             )
         }
 

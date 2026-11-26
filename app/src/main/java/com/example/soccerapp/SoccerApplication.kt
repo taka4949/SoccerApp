@@ -12,6 +12,9 @@ import com.example.soccerapp.worker.MatchRefreshWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 
 
 
@@ -28,6 +31,19 @@ class SoccerApplication : Application() , Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "favorite_matches",
+                "お気に入り試合",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "お気に入り試合の開始前に通知します"
+            }
+
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
+        }
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

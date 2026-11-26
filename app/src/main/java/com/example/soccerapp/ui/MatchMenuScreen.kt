@@ -37,7 +37,7 @@ fun MatchMenuScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            text = "掲示板",
+            text = "試合メニュー",
             color = Color.White,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -58,7 +58,7 @@ fun MatchMenuScreen(
                 .padding(22.dp)
         ) {
             Text(
-                "交流掲示板  ›",
+                text = "交流掲示板 >",
                 color = Color.White,
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold

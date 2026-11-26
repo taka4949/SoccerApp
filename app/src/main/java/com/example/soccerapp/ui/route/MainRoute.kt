@@ -16,7 +16,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.soccerapp.MainViewModel
 import com.example.soccerapp.navigation.AppNavigation
 import com.example.soccerapp.ui.state.MainUiState
-
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 
 @Composable
 fun MainRoute(
@@ -28,18 +34,47 @@ fun MainRoute(
     mainViewModel.uiState.collectAsStateWithLifecycle()//画面のLifecycleに合わせてStateFlowを監視
     //ここで、変数の変化を観測し、↓へ再コンポーズ促す。
 
+
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+
     MainScreen(
         uiState = uiState,
         onRetry = mainViewModel::loadData,//意味＝ファイル内の関数→エラーになった際に必要
-                onLeagueSelected = mainViewModel::loadMatches//大事、Navigationにviewmodelの関数だと知らせないため。
+                onLeagueSelected = mainViewModel::loadMatches,//大事、Navigationにviewmodelの関数だと知らせないため。
+
+        onFavoriteChange = { matchId, isFavorite ->
+            mainViewModel.setFavoriteMatch(matchId, isFavorite)
+
+            if (
+                isFavorite &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
+            }
+        }
+
     )
+
+
 }
 
 @Composable
 fun MainScreen(
     uiState: MainUiState,
     onRetry: () -> Unit, //関数の引数なし、戻り値なし。エラー用
-    onLeagueSelected: (String) -> Unit
+    onLeagueSelected: (String) -> Unit,
+    onFavoriteChange: (Int, Boolean) -> Unit
 
 ) {
     when (uiState) {
@@ -56,7 +91,9 @@ fun MainScreen(
             AppNavigation(
                 leagues = uiState.leagues,
                 matches = uiState.matches,//ここで、matchリストの部分のみ更新して、マッチリスト表示へ。
-                onLeagueSelected = onLeagueSelected
+                onLeagueSelected = onLeagueSelected,
+                favoriteMatchIds = uiState.favoriteMatchIds,
+                onFavoriteChange = onFavoriteChange
             )
         }
 

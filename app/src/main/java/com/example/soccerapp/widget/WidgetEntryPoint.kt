@@ -5,11 +5,13 @@ import com.example.soccerapp.data.local.dao.MatchDao
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import com.example.soccerapp.data.local.dao.FavoriteMatchDao
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface WidgetEntryPoint {
     fun matchDao(): MatchDao //Hiltから取得
+    fun favoriteMatchDao(): FavoriteMatchDao
 }
 
 

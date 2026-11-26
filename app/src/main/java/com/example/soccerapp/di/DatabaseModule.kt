@@ -13,7 +13,8 @@ import javax.inject.Singleton
 import com.example.soccerapp.data.local.dao.LeagueDao
 import com.example.soccerapp.data.local.database.MIGRATION_1_2
 import com.example.soccerapp.data.local.database.MIGRATION_2_3
-
+import com.example.soccerapp.data.local.dao.FavoriteMatchDao
+import com.example.soccerapp.data.local.database.MIGRATION_3_4
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {//objectは1個。
@@ -30,7 +31,8 @@ object DatabaseModule {//objectは1個。
         )
             .addMigrations(
                 MIGRATION_1_2,
-                MIGRATION_2_3
+                MIGRATION_2_3,
+                MIGRATION_3_4
             )
             .build()//↑どの保存先をどのデータベース設計で使うのかを設定している。
     }
@@ -51,6 +53,17 @@ object DatabaseModule {//objectは1個。
     ): LeagueDao {
         return database.leagueDao()
     }
+
+
+    @Provides
+    @Singleton
+    fun provideFavoriteMatchDao(
+        database: SoccerDatabase
+    ): FavoriteMatchDao {
+        return database.favoriteMatchDao()
+    }
+
+
 }
 
 //このファイルの役割
