@@ -30,4 +30,15 @@ interface MatchDao {
     fun observeMatchesByLeague(
         leagueId: String
     ): Flow<List<MatchEntity>>
+
+
+    @Query("""
+    SELECT * FROM matches
+    WHERE utcDate >= :nowUtc
+      AND status IN ('SCHEDULED', 'TIMED')
+    ORDER BY utcDate ASC
+    LIMIT 1
+""")
+    suspend fun getNextMatch(nowUtc: String): MatchEntity?
+
 }

@@ -12,12 +12,18 @@ import com.example.soccerapp.data.local.dao.LeagueDao
 import com.example.soccerapp.data.local.entity.LeagueEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import android.content.Context
+import android.util.Log
+import androidx.glance.appwidget.updateAll
+import com.example.soccerapp.widget.MatchWidget
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 
 class MatchRepository@Inject constructor(
     private val soccerApiService: SoccerApiService,
     private val matchDao: MatchDao,
-    private val leagueDao: LeagueDao
+    private val leagueDao: LeagueDao,
+    @ApplicationContext private val context: Context
 ) : SoccerRepository {//このクラスが必要になったら、このコンストラクタを使えば作れる。
 
 
@@ -109,6 +115,8 @@ class MatchRepository@Inject constructor(
             }
 
             matchDao.upsertMatches(matchEntities) // Roomへ保存、更新
+
+            updateMatchWidget()
 
             matches.map { match ->//Dto→Match.ktへ
                 Match(
@@ -214,6 +222,8 @@ class MatchRepository@Inject constructor(
             )
         )
 
+        updateMatchWidget()
+
         return match
     }
 
@@ -239,6 +249,19 @@ class MatchRepository@Inject constructor(
                 }
             }
     }
+
+
+
+    private suspend fun updateMatchWidget() {
+        try {
+            MatchWidget().updateAll(context)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w("MatchRepository", "Widget update failed", e)
+        }
+    }
+
 
 
 }
