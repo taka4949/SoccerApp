@@ -29,6 +29,14 @@ interface SoccerRepository {
         competitionCode: String
     ): Flow<List<Match>>
 
+
+    fun observeFavoriteMatchIds(): Flow<Set<Int>>
+
+    suspend fun setFavoriteMatch(
+        matchId: Int,
+        isFavorite: Boolean
+    )
+
 }
 
 

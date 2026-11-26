@@ -3,6 +3,7 @@ package com.example.soccerapp.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,13 +26,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.soccerapp.data.model.Match
+import androidx.compose.material3.IconButton
 
 @Composable
 fun MatchListScreen(
     matches: List<Match>,
+    favoriteMatchIds: Set<Int>,
+    onFavoriteChange: (Int, Boolean) -> Unit,
     onMatchClick: (Int) -> Unit
 ) {
-    val sortedMatches = matches.sortedBy { it.utcDate }
+    val sortedMatches = matches.sortedWith(
+        compareBy<Match> { it.status == "FINISHED" }
+            .thenBy { it.utcDate }
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -59,6 +66,10 @@ fun MatchListScreen(
                 else -> match.status
             }
 
+            val isFavorite = match.id in favoriteMatchIds
+
+
+
             val dateText = "${match.utcDate.substring(5, 7).toInt()}月${match.utcDate.substring(8, 10).toInt()}日 ${match.utcDate.substring(11, 16)}"
 
             Column(
@@ -69,12 +80,39 @@ fun MatchListScreen(
                     .clickable { onMatchClick(match.id) }
                     .padding(horizontal = 12.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = dateText,
-                    fontSize = 11.sp,
-                    color = Color(0xFFBDB7CD),
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
+
+
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = dateText,
+                        fontSize = 11.sp,
+                        color = Color(0xFFBDB7CD)
+                    )
+
+                    IconButton(
+                        onClick = {
+                            onFavoriteChange(match.id, !isFavorite)
+                        }
+                    ) {
+                        Text(
+                            text = if (isFavorite) "♥" else "♡",
+                            color = if (isFavorite) {
+                                Color(0xFFF48DC6)
+                            } else {
+                                Color.White
+                            },
+                            fontSize = 25.sp
+                        )
+                    }
+                }
+
+
+
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(

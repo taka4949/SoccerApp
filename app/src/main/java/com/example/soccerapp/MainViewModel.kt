@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
-
+import android.util.Log
+import kotlinx.coroutines.flow.update
 
 
 @HiltViewModel
@@ -30,6 +31,8 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> =
         _uiState.asStateFlow()//外部用。
 
+
+    private var observeFavoritesJob: Job? = null
 
     private var loadMatchesJob: Job? = null
     private var loadingCompetitionCode: String? = null
@@ -56,6 +59,25 @@ class MainViewModel @Inject constructor(
                         leagues = leagues,
                         matches = emptyList()
                     )
+
+
+
+                    observeFavoritesJob?.cancel()
+
+                    observeFavoritesJob = viewModelScope.launch {
+                        repository.observeFavoriteMatchIds()
+                            .collect { ids ->
+                                _uiState.update { state ->
+                                    if (state is MainUiState.Success) {
+                                        state.copy(favoriteMatchIds = ids)
+                                    } else {
+                                        state
+                                    }
+                                }
+                            }
+                    }
+
+
             } catch (exception: CancellationException) {
                 throw exception
             } catch (e: Exception) {
@@ -131,11 +153,34 @@ class MainViewModel @Inject constructor(
 
 
 
-            _uiState.value = currentState.copy(//MainScreenのMainRouteがcollectする。
-                matches = matches
-            )
+            _uiState.update { state ->
+                    if (state is MainUiState.Success) {
+                           state.copy(matches = matches)
+                      } else {
+                           state
+                       }
+                }
         }
     }
+
+
+
+    fun setFavoriteMatch(
+        matchId: Int,
+        isFavorite: Boolean
+    ) {
+        viewModelScope.launch {
+            try {
+                repository.setFavoriteMatch(matchId, isFavorite)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Favorite update failed", e)
+            }
+        }
+    }
+
+
 }
 
 //最初にリーグをタップ(Flow仕組み）

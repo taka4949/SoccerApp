@@ -10,7 +10,8 @@ sealed interface MainUiState {//sealedはuiの状態の種類を制限する→�
 
     data class Success(
         val leagues: List<League>,
-        val matches: List<Match>
+        val matches: List<Match>,
+        val favoriteMatchIds: Set<Int> = emptySet()
     ) : MainUiState
 
     data class Error(
